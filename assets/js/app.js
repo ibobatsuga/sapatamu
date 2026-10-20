@@ -253,7 +253,7 @@ function applyWorkspaceModeUI() {
     }
     if (remotePill) remotePill.style.display = "flex";
     plannerNavItems.forEach(el => el.style.display = "none");
-    if (["timeline", "vendors", "checklist", "angpao"].includes(activeTab)) {
+    if (["timeline", "vendors", "checklist"].includes(activeTab)) {
       switchTab("dashboard");
     }
   } else {
@@ -536,6 +536,13 @@ function showCheckInModal(guest, isDuplicate = false) {
 
 function closeCheckInModal() {
   document.getElementById("checkInModal").classList.remove("active");
+}
+
+function quickLogAngpaoForGuest(guestName) {
+  closeCheckInModal();
+  openAddAngpaoModal();
+  const nameInput = document.getElementById("angpaoGuestName");
+  if (nameInput) nameInput.value = guestName || "";
 }
 
 // Print Receipt Action from Modal or Table

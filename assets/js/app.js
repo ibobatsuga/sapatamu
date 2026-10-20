@@ -1,14 +1,19 @@
 /**
- * Wedding Management & Smart Reception OS
- * Core Application Controller
+ * SapaTamu — Wedding Management & Smart Reception OS
+ * Core Application Controller (Dual-Mode: Reception & Planner Studio)
  */
 
 // Storage Keys
 const STORAGE_EVENT = "vow_event_data_v1";
 const STORAGE_GUESTS = "vow_guests_data_v1";
 const STORAGE_TABLES = "vow_tables_data_v1";
+const STORAGE_TIMELINE = "vow_timeline_v1";
+const STORAGE_VENDORS = "vow_vendors_v1";
+const STORAGE_CHECKLIST = "vow_checklist_v1";
+const STORAGE_ANGPAO = "vow_angpao_v1";
+const STORAGE_MODE = "vow_workspace_mode_v1";
 
-// Default Seed Data
+// 1. Default Event Metadata
 const defaultEvent = {
   title: "The Wedding Celebration",
   couple: "Kevin & Nadya",
@@ -19,6 +24,7 @@ const defaultEvent = {
   souvenirClaimed: 0
 };
 
+// 2. Default Tables & Zones
 const defaultTables = [
   { id: "T1", name: "Meja 01 (VIP Pria)", capacity: 10, zone: "Depan Panggung Kanan" },
   { id: "T2", name: "Meja 02 (VIP Wanita)", capacity: 10, zone: "Depan Panggung Kiri" },
@@ -28,7 +34,7 @@ const defaultTables = [
   { id: "T6", name: "Meja 06 (Sahabat Kampus)", capacity: 10, zone: "Belakang Kiri" }
 ];
 
-// Seed sample guests with unique codes compatible with undanganku.id
+// 3. Default Guests Seed (Compatible with undanganku.id unique codes)
 const defaultGuests = [
   {
     id: "g1",
@@ -137,10 +143,58 @@ const defaultGuests = [
   }
 ];
 
-// Application State
+// 4. Default Run-Sheet / Master Timeline
+const defaultTimeline = [
+  { id: "tm1", time: "15:30", title: "Loading Vendor & Cek Meja Resepsi", pic: "Ira (WO Lead)", location: "Foyer Ballroom", status: "done", notes: "Pastikan meja registrasi dan aliran antrean rapi." },
+  { id: "tm2", time: "16:30", title: "Briefing Kru Resepsi & Tes Printer 58mm", pic: "Doni (Reception Captain)", location: "Meja Resepsi", status: "done", notes: "Tes print 1 roll kertas thermal dan cek koneksi Bluetooth." },
+  { id: "tm3", time: "17:00", title: "Pintu Foyer Dibuka & Registrasi Tamu", pic: "Tim Resepsionis", location: "Foyer Ballroom", status: "current", notes: "Scan QR tamu undanganku.id, serahkan struk meja & kupon doorprize." },
+  { id: "tm4", time: "18:30", title: "Grand Entrance / Kirab Pengantin", pic: "Floor Captain", location: "Grand Ballroom", status: "upcoming", notes: "Cue musik kirab, lampu spotlight panggung siap." },
+  { id: "tm5", time: "19:15", title: "Sambutan Perwakilan & Toast Bersama", pic: "MC Ferry Salim", location: "Panggung Utama", status: "upcoming", notes: "Keluarga inti berdiri di pelaminan." },
+  { id: "tm6", time: "20:00", title: "Sesi Foto VIP & Makan Malam", pic: "Stage Lead", location: "Pelaminan", status: "upcoming", notes: "Panggil tamu VIP sesuai urutan Meja 01 & 02." },
+  { id: "tm7", time: "20:30", title: "Pengundian Doorprize Utama", pic: "MC & Doorprize Team", location: "Panggung Utama", status: "upcoming", notes: "Buka menu Stage Doorprize SapaTamu di layar panggung." },
+  { id: "tm8", time: "21:30", title: "Penutupan & Rekapitulasi Resepsi", pic: "WO Lead & Resepsi", location: "Meja Resepsi", status: "upcoming", notes: "Kunci kotak angpao, serahkan buku tamu dan sisa souvenir ke keluarga." }
+];
+
+// 5. Default Vendor Emergency Directory
+const defaultVendors = [
+  { id: "v1", category: "Venue Coordinator", vendorName: "Pullman Grand Ballroom", picName: "Ibu Maya", phone: "081298765432", status: "Standby di Venue", notes: "Akses loading dock & ruang transit" },
+  { id: "v2", category: "Katering", vendorName: "Puspa Catering Nusantara", picName: "Pak Dedi", phone: "081311223344", status: "On-site Ready", notes: "Stok gubukan & VIP dinner table" },
+  { id: "v3", category: "Fotografer & Video", vendorName: "Lumina Visuals", picName: "Mas Kevin", phone: "085699887766", status: "On-site Ready", notes: "Lead photographer panggung & candid" },
+  { id: "v4", category: "Sound & Lighting", vendorName: "ProMax Production", picName: "Mas Bima", phone: "087812345678", status: "On-site Ready", notes: "Audio mic MC & musik latar" },
+  { id: "v5", category: "Master of Ceremony (MC)", vendorName: "Ferry Salim Entertainment", picName: "Ferry Salim", phone: "081198761234", status: "Standby di Venue", notes: "Pemandu rundown & pengundian doorprize" },
+  { id: "v6", category: "Dekorasi Pelaminan", vendorName: "Flora & Vow Decor", picName: "Mbak Nadia", phone: "081512344321", status: "Handover Selesai", notes: "Bunga segar & backdrop photo gallery" },
+  { id: "v7", category: "Make Up Artist (MUA)", vendorName: "Glam by Sarah", picName: "Sarah MUA", phone: "081233445566", status: "Ruang Rias", notes: "Retouch busana nasional & resepsi" }
+];
+
+// 6. Default Reception Checklist & Production Equipment
+const defaultChecklist = [
+  { id: "c1", zone: "Meja Resepsi", item: "Printer Thermal Bluetooth 58mm", qty: "2 Unit", status: "ready", pic: "Reception Captain" },
+  { id: "c2", zone: "Meja Resepsi", item: "Kertas Roll Thermal 58mm Cadangan", qty: "10 Roll", status: "ready", pic: "Reception Captain" },
+  { id: "c3", zone: "Meja Resepsi", item: "Barcode Scanner Gun USB/Bluetooth", qty: "2 Unit", status: "ready", pic: "Reception Captain" },
+  { id: "c4", zone: "Meja Resepsi", item: "Tablet / Laptop Front Desk + Charger", qty: "2 Unit", status: "ready", pic: "IT Support" },
+  { id: "c5", zone: "Meja Resepsi", item: "Kotak Angpao Gembok & Kunci", qty: "2 Kotak", status: "ready", pic: "Tim Keluarga" },
+  { id: "c6", zone: "Meja Resepsi", item: "Spidol Emas & Buku Tamu Cadangan", qty: "4 Set", status: "ready", pic: "Resepsionis" },
+  { id: "c7", zone: "Souvenir Station", item: "Stok Souvenir Box Reguler", qty: "250 Pcs", status: "ready", pic: "Souvenir Lead" },
+  { id: "c8", zone: "Souvenir Station", item: "Souvenir Khusus Tamu VIP", qty: "50 Pcs", status: "ready", pic: "Souvenir Lead" },
+  { id: "c9", zone: "Panggung Utama", item: "Koneksi Laptop ke LED Screen Doorprize", qty: "1 Setup", status: "ready", pic: "Stage Lead" }
+];
+
+// 7. Default Angpao & Gift Records
+const defaultAngpao = [
+  { id: "a1", guestName: "Bpk. Bambang Soemantri & Istri", type: "Amplop Fisik", boxCode: "Kotak A (Keluarga Pria)", time: "17:36", receiver: "Siti (Meja 1)", notes: "Dimasukkan ke Kotak A" },
+  { id: "a2", guestName: "Ibu Sri Rahayu", type: "QRIS / Digital Transfer", boxCode: "BCA Pengantin", time: "17:43", receiver: "Siti (Meja 1)", notes: "Bukti transfer diverifikasi" },
+  { id: "a3", guestName: "Dr. Hendra Gunawan", type: "Kado Fisik", boxCode: "Nomor Titipan #01", time: "18:06", receiver: "Rini (Meja 2)", notes: "Kado diletakkan di rak titipan" }
+];
+
+// State Initialization
 let appEvent = JSON.parse(localStorage.getItem(STORAGE_EVENT)) || defaultEvent;
 let appGuests = JSON.parse(localStorage.getItem(STORAGE_GUESTS)) || defaultGuests;
 let appTables = JSON.parse(localStorage.getItem(STORAGE_TABLES)) || defaultTables;
+let appTimeline = JSON.parse(localStorage.getItem(STORAGE_TIMELINE)) || defaultTimeline;
+let appVendors = JSON.parse(localStorage.getItem(STORAGE_VENDORS)) || defaultVendors;
+let appChecklist = JSON.parse(localStorage.getItem(STORAGE_CHECKLIST)) || defaultChecklist;
+let appAngpao = JSON.parse(localStorage.getItem(STORAGE_ANGPAO)) || defaultAngpao;
+let currentMode = localStorage.getItem(STORAGE_MODE) || "reception"; // 'reception' or 'planner'
 
 let activeTab = "dashboard";
 let html5QrScanner = null;
@@ -153,6 +207,11 @@ function persistState() {
   localStorage.setItem(STORAGE_EVENT, JSON.stringify(appEvent));
   localStorage.setItem(STORAGE_GUESTS, JSON.stringify(appGuests));
   localStorage.setItem(STORAGE_TABLES, JSON.stringify(appTables));
+  localStorage.setItem(STORAGE_TIMELINE, JSON.stringify(appTimeline));
+  localStorage.setItem(STORAGE_VENDORS, JSON.stringify(appVendors));
+  localStorage.setItem(STORAGE_CHECKLIST, JSON.stringify(appChecklist));
+  localStorage.setItem(STORAGE_ANGPAO, JSON.stringify(appAngpao));
+  localStorage.setItem(STORAGE_MODE, currentMode);
 }
 
 // Generate unique 4-character random code for undanganku.id integration
@@ -174,11 +233,43 @@ function showToast(title, msg, type = "info") {
   setTimeout(() => toast.remove(), 3500);
 }
 
+// Mode Switcher: Reception (Hari-H) vs Planner (Persiapan)
+function switchWorkspaceMode(mode) {
+  currentMode = mode;
+  persistState();
+  applyWorkspaceModeUI();
+  showToast("Mode Berubah", mode === "reception" ? "Mode Resepsionis (Hari-H) aktif — Fokus Check-in & Struk" : "Mode Planner Studio aktif — Akses Lengkap Manajemen WO", "info");
+}
+
+function applyWorkspaceModeUI() {
+  const modeBtn = document.getElementById("modeSwitchBtn");
+  const plannerNavItems = document.querySelectorAll(".nav-planner-only");
+
+  if (currentMode === "reception") {
+    if (modeBtn) {
+      modeBtn.innerHTML = "🎯 Mode: <strong>Resepsionis (Hari-H)</strong>";
+      modeBtn.className = "mode-switch-pill reception";
+    }
+    plannerNavItems.forEach(el => el.style.display = "none");
+    // If currently on a planner tab, redirect to dashboard
+    if (["timeline", "vendors", "checklist", "angpao"].includes(activeTab)) {
+      switchTab("dashboard");
+    }
+  } else {
+    if (modeBtn) {
+      modeBtn.innerHTML = "📋 Mode: <strong>Planner Studio (WO)</strong>";
+      modeBtn.className = "mode-switch-pill planner";
+    }
+    plannerNavItems.forEach(el => el.style.display = "block");
+  }
+}
+
 // Initialize Application
 document.addEventListener("DOMContentLoaded", () => {
   setupNavigation();
   setupBarcodeGunListener();
   setupPrinterEvents();
+  applyWorkspaceModeUI();
   renderAll();
 });
 
@@ -201,6 +292,21 @@ function switchTab(tabId) {
     panel.classList.toggle("active", panel.id === `tab-${tabId}`);
   });
 
+  const titleEl = document.getElementById("topbarTitle");
+  const titles = {
+    dashboard: "Wedding Reception Dashboard",
+    scanner: "Front Desk & QR Check-in",
+    guests: "Manajemen Tamu Undangan",
+    seating: "Visual Seating & Status Meja",
+    doorprize: "Stage Doorprize Lucky Draw",
+    printer: "Pengaturan Bluetooth Thermal 58mm",
+    timeline: "Run-Sheet / Master Timeline Hari H",
+    vendors: "Direktori Kontak Vendor Darurat Hari H",
+    checklist: "Checklist Meja Resepsi & Produksi",
+    angpao: "Catatan Titipan Angpao & Kado"
+  };
+  if (titleEl && titles[tabId]) titleEl.textContent = titles[tabId];
+
   if (tabId === "scanner") {
     startCameraScanner();
   } else {
@@ -217,13 +323,11 @@ function switchTab(tabId) {
 // Global Hardware Barcode Gun Listener
 function setupBarcodeGunListener() {
   window.addEventListener("keydown", (e) => {
-    // Ignore input if user is typing inside text fields
     if (["INPUT", "TEXTAREA", "SELECT"].includes(e.target.tagName)) {
       return;
     }
 
     const now = Date.now();
-    // Fast keystrokes (< 60ms between chars) indicate barcode scanner gun
     if (now - barcodeLastKeyTime > 80) {
       barcodeBuffer = "";
     }
@@ -284,13 +388,13 @@ function startCameraScanner() {
       { facingMode: "environment" },
       config,
       (decodedText) => {
-        // Successful QR scan
         processGuestCheckInByCode(decodedText);
       },
       () => {}
     ).catch(err => {
       console.warn("Camera start warning:", err);
-      document.getElementById("cameraNotice").textContent = "Kamera tidak aktif atau izin ditolak. Anda dapat menggunakan Scanner Barcode Gun atau input manual.";
+      const notice = document.getElementById("cameraNotice");
+      if (notice) notice.textContent = "Kamera tidak aktif atau izin ditolak. Anda dapat menggunakan Scanner Barcode Gun atau input manual.";
     });
   } catch (e) {
     console.warn("Scanner error:", e);
@@ -311,7 +415,6 @@ function stopCameraScanner() {
 // Core Check-In Logic
 function processGuestCheckInByCode(rawCode) {
   const code = rawCode.trim();
-  // Match by code or invitation URL parameter
   let cleanCode = code;
   if (code.includes("code=")) {
     cleanCode = code.split("code=")[1].split("&")[0];
@@ -329,7 +432,7 @@ function processGuestCheckInByCode(rawCode) {
 
   if (guest.isCheckedIn) {
     SoundFX.playWarning();
-    showCheckInModal(guest, true); // Modal with warning duplicate flag
+    showCheckInModal(guest, true);
     return;
   }
 
@@ -414,7 +517,6 @@ function printCurrentGuestReceipt() {
       .then(() => showToast("Cetak Struk", "Berhasil dikirim ke printer 58mm!", "success"))
       .catch(err => alert("Gagal cetak Bluetooth: " + err.message));
   } else {
-    // Show Virtual Simulator & trigger browser print
     openVirtualReceiptModal(lastScannedGuest);
   }
 }
@@ -443,6 +545,10 @@ function renderAll() {
   renderGauge();
   renderGuestTable();
   renderTableOccupancy();
+  renderTimeline();
+  renderVendors();
+  renderChecklist();
+  renderAngpao();
 }
 
 // 1. Render Top KPI Cards (Pastel Tone)
@@ -453,20 +559,30 @@ function renderKPIs() {
   const souvenirClaimed = appGuests.filter(g => g.souvenirClaimed).reduce((acc, g) => acc + g.pax, 0);
   const doorprizePool = appGuests.filter(g => g.isCheckedIn && g.doorprize).length;
 
-  document.getElementById("kpiCheckedIn").textContent = checkedIn;
-  document.getElementById("kpiCheckedInSub").textContent = `${Math.round((checkedIn / (total || 1)) * 100)}% dari target pax`;
+  const elCheckIn = document.getElementById("kpiCheckedIn");
+  const elCheckInSub = document.getElementById("kpiCheckedInSub");
+  if (elCheckIn) elCheckIn.textContent = checkedIn;
+  if (elCheckInSub) elCheckInSub.textContent = `${Math.round((checkedIn / (total || 1)) * 100)}% dari target pax`;
 
-  document.getElementById("kpiAwaiting").textContent = awaiting;
-  document.getElementById("kpiAwaitingSub").textContent = `${appGuests.filter(g => !g.isCheckedIn).length} undangan`;
+  const elAwaiting = document.getElementById("kpiAwaiting");
+  const elAwaitingSub = document.getElementById("kpiAwaitingSub");
+  if (elAwaiting) elAwaiting.textContent = awaiting;
+  if (elAwaitingSub) elAwaitingSub.textContent = `${appGuests.filter(g => !g.isCheckedIn).length} undangan`;
 
-  document.getElementById("kpiTotalGuests").textContent = total;
-  document.getElementById("kpiTotalGuestsSub").textContent = `${appGuests.length} kontak undangan`;
+  const elTotal = document.getElementById("kpiTotalGuests");
+  const elTotalSub = document.getElementById("kpiTotalGuestsSub");
+  if (elTotal) elTotal.textContent = total;
+  if (elTotalSub) elTotalSub.textContent = `${appGuests.length} kontak undangan`;
 
-  document.getElementById("kpiSouvenir").textContent = souvenirClaimed;
-  document.getElementById("kpiSouvenirSub").textContent = `Stok: ${appEvent.souvenirTotal} pcs`;
+  const elSouvenir = document.getElementById("kpiSouvenir");
+  const elSouvenirSub = document.getElementById("kpiSouvenirSub");
+  if (elSouvenir) elSouvenir.textContent = souvenirClaimed;
+  if (elSouvenirSub) elSouvenirSub.textContent = `Stok: ${appEvent.souvenirTotal} pcs`;
 
-  document.getElementById("kpiDoorprize").textContent = doorprizePool;
-  document.getElementById("kpiDoorprizeSub").textContent = "Kupon terdaftar hadir";
+  const elDoorprize = document.getElementById("kpiDoorprize");
+  const elDoorprizeSub = document.getElementById("kpiDoorprizeSub");
+  if (elDoorprize) elDoorprize.textContent = doorprizePool;
+  if (elDoorprizeSub) elDoorprizeSub.textContent = "Kupon terdaftar hadir";
 }
 
 // 2. Render Check-in Arrival Chart
@@ -583,7 +699,7 @@ function renderGuestTable() {
   tbodies.forEach(tb => tb.innerHTML = html);
 }
 
-// 5. Render Seating & Table Occupancy
+// 5. Render Seating & Table Occupancy (Visual Table Allocation)
 function renderTableOccupancy() {
   const container = document.getElementById("tableCardsGrid");
   if (!container) return;
@@ -595,10 +711,10 @@ function renderTableOccupancy() {
     const isFull = seatedCount >= t.capacity;
 
     return `
-      <div style="background:#fff; border:1px solid var(--border-light); border-radius:14px; padding:18px; box-shadow:var(--shadow-sm);">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
+      <div style="background:#fff; border:1px solid var(--border-light); border-radius:14px; padding:20px; box-shadow:var(--shadow-sm);">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
           <div>
-            <h4 style="font-size:0.95rem; font-weight:700;">${t.name}</h4>
+            <h4 style="font-size:1rem; font-weight:700;">${t.name}</h4>
             <span style="font-size:0.75rem; color:var(--text-muted);">${t.zone}</span>
           </div>
           <span class="badge ${isFull ? 'badge-vip' : 'badge-family'}">
@@ -608,16 +724,195 @@ function renderTableOccupancy() {
         <div style="background:#F1F5F9; border-radius:6px; height:8px; overflow:hidden; margin-bottom:12px;">
           <div style="background:#2563EB; width:${Math.min(100, (checkedInCount / t.capacity) * 100)}%; height:100%;"></div>
         </div>
-        <div style="font-size:0.75rem; color:var(--text-muted); display:flex; justify-content:space-between;">
-          <span>Hadir di lokasi: <strong>${checkedInCount}</strong></span>
-          <span>Sisa: <strong>${t.capacity - seatedCount}</strong></span>
+        <div style="font-size:0.75rem; color:var(--text-muted); display:flex; justify-content:space-between; margin-bottom:12px;">
+          <span>Hadir di lokasi: <strong>${checkedInCount} pax</strong></span>
+          <span>Tersisa: <strong>${Math.max(0, t.capacity - seatedCount)} kursi</strong></span>
+        </div>
+        <div style="border-top:1px dashed var(--border-light); padding-top:10px;">
+          <div style="font-size:0.72rem; font-weight:600; color:var(--text-muted); margin-bottom:6px;">Daftar Tamu di Meja Ini:</div>
+          <div style="max-height:80px; overflow-y:auto; font-size:0.75rem;">
+            ${tableGuests.length ? tableGuests.map(tg => `
+              <div style="display:flex; justify-content:space-between; margin-bottom:3px;">
+                <span>${tg.name} (${tg.pax}p)</span>
+                <span style="color:${tg.isCheckedIn ? '#16A34A' : '#94A3B8'}; font-weight:600;">${tg.isCheckedIn ? 'Hadir' : 'Menunggu'}</span>
+              </div>
+            `).join('') : '<span style="color:#94A3B8; font-style:italic;">Belum ada tamu dialokasikan</span>'}
+          </div>
         </div>
       </div>
     `;
   }).join("");
 }
 
-// 6. View QR Code Modal
+// 6. Render Run-Sheet / Master Timeline
+function renderTimeline() {
+  const container = document.getElementById("timelineListContainer");
+  if (!container) return;
+
+  container.innerHTML = appTimeline.map(item => {
+    const statusBadge = item.status === "done" 
+      ? '<span class="badge badge-status-in">✓ Selesai</span>' 
+      : item.status === "current" 
+      ? '<span class="badge badge-vip">● Berlangsung</span>' 
+      : '<span class="badge badge-status-out">○ Mendatang</span>';
+
+    return `
+      <div style="display:flex; gap:18px; margin-bottom:20px; align-items:flex-start;">
+        <div style="min-width:70px; font-family:var(--font-mono); font-weight:700; font-size:1rem; color:var(--primary); padding-top:2px;">
+          ${item.time}
+        </div>
+        <div style="flex:1; background:#fff; border:1px solid var(--border-light); border-radius:14px; padding:16px 20px; box-shadow:var(--shadow-sm);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <h4 style="font-size:1rem; font-weight:700;">${item.title}</h4>
+            <div style="display:flex; gap:8px; align-items:center;">
+              ${statusBadge}
+              <button class="btn btn-outline btn-sm" onclick="toggleTimelineStatus('${item.id}')">Ubah Status</button>
+            </div>
+          </div>
+          <div style="font-size:0.8rem; color:var(--text-muted); display:flex; gap:16px; margin-bottom:6px;">
+            <span>📍 ${item.location}</span>
+            <span>👤 PIC: <strong>${item.pic}</strong></span>
+          </div>
+          <div style="font-size:0.82rem; color:#475569; background:#F8FAFC; padding:8px 12px; border-radius:8px;">
+            ${item.notes}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function toggleTimelineStatus(id) {
+  const item = appTimeline.find(t => t.id === id);
+  if (!item) return;
+  const next = { done: "upcoming", upcoming: "current", current: "done" };
+  item.status = next[item.status] || "upcoming";
+  persistState();
+  renderTimeline();
+}
+
+// 7. Render Vendor Emergency Directory
+function renderVendors() {
+  const tbody = document.getElementById("vendorTableBody");
+  if (!tbody) return;
+
+  tbody.innerHTML = appVendors.map((v, i) => {
+    const cleanPhone = v.phone.replace(/[^0-9]/g, "");
+    const waPhone = cleanPhone.startsWith("0") ? "62" + cleanPhone.slice(1) : cleanPhone;
+    return `
+      <tr>
+        <td style="color:var(--text-muted); font-weight:600;">#${i + 1}</td>
+        <td>
+          <div style="font-weight:700; color:var(--text-main); font-size:0.92rem;">${v.vendorName}</div>
+          <div style="font-size:0.75rem; color:var(--text-muted);">${v.category}</div>
+        </td>
+        <td><strong>${v.picName}</strong></td>
+        <td>
+          <div style="font-family:var(--font-mono); font-size:0.85rem;">${v.phone}</div>
+        </td>
+        <td>
+          <span class="badge badge-status-in">${v.status}</span>
+        </td>
+        <td style="font-size:0.8rem; color:var(--text-muted);">${v.notes}</td>
+        <td>
+          <a href="https://wa.me/${waPhone}?text=Halo%20${encodeURIComponent(v.picName)},%20update%20acara%20pernikahan%20Kevin%20Nadya" target="_blank" class="btn btn-primary btn-sm" style="background:#16A34A; text-decoration:none;">
+            💬 WhatsApp
+          </a>
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
+
+// 8. Render Reception Checklist
+function renderChecklist() {
+  const tbody = document.getElementById("checklistTableBody");
+  if (!tbody) return;
+
+  tbody.innerHTML = appChecklist.map((c, i) => {
+    return `
+      <tr>
+        <td style="color:var(--text-muted); font-weight:600;">#${i + 1}</td>
+        <td><span class="badge badge-family">${c.zone}</span></td>
+        <td><strong>${c.item}</strong></td>
+        <td>${c.qty}</td>
+        <td>${c.pic}</td>
+        <td>
+          <button class="btn btn-sm ${c.status === 'ready' ? 'btn-primary' : 'btn-outline'}" onclick="toggleChecklistStatus('${c.id}')">
+            ${c.status === 'ready' ? '✓ Siap di Venue' : '○ Belum Siap'}
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
+
+function toggleChecklistStatus(id) {
+  const item = appChecklist.find(c => c.id === id);
+  if (!item) return;
+  item.status = item.status === "ready" ? "pending" : "ready";
+  persistState();
+  renderChecklist();
+}
+
+// 9. Render Angpao & Gift Tracker
+function renderAngpao() {
+  const tbody = document.getElementById("angpaoTableBody");
+  if (!tbody) return;
+
+  tbody.innerHTML = appAngpao.map((a, i) => {
+    return `
+      <tr>
+        <td style="color:var(--text-muted); font-weight:600;">#${i + 1}</td>
+        <td><strong>${a.guestName}</strong></td>
+        <td><span class="badge ${a.type.includes('Fisik') ? 'badge-vip' : 'badge-family'}">${a.type}</span></td>
+        <td>${a.boxCode}</td>
+        <td>${a.time} WIB</td>
+        <td>${a.receiver}</td>
+        <td style="font-size:0.8rem; color:var(--text-muted);">${a.notes}</td>
+      </tr>
+    `;
+  }).join("");
+}
+
+function addNewAngpaoRecord() {
+  const guestName = document.getElementById("angpaoGuestName").value.trim();
+  const type = document.getElementById("angpaoType").value;
+  const boxCode = document.getElementById("angpaoBoxCode").value.trim();
+  const receiver = document.getElementById("angpaoReceiver").value.trim();
+  const notes = document.getElementById("angpaoNotes").value.trim();
+
+  if (!guestName) {
+    alert("Nama tamu atau pemberi titipan wajib diisi!");
+    return;
+  }
+
+  const newRecord = {
+    id: "a_" + Date.now(),
+    guestName,
+    type,
+    boxCode: boxCode || "Kotak Registrasi",
+    time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+    receiver: receiver || "Resepsionis",
+    notes
+  };
+
+  appAngpao.unshift(newRecord);
+  persistState();
+  closeAddAngpaoModal();
+  renderAngpao();
+  showToast("Titipan Dicatat", `Titipan dari ${guestName} berhasil dicatat di sistem`, "success");
+}
+
+function openAddAngpaoModal() {
+  document.getElementById("addAngpaoModal").classList.add("active");
+}
+
+function closeAddAngpaoModal() {
+  document.getElementById("addAngpaoModal").classList.remove("active");
+}
+
+// 10. View QR Code Modal
 function openQRCodeModal(guestId) {
   const guest = appGuests.find(g => g.id === guestId);
   if (!guest) return;
@@ -644,7 +939,7 @@ function closeQRModal() {
   document.getElementById("qrModal").classList.remove("active");
 }
 
-// 7. Doorprize Lucky Draw Machine
+// 11. Doorprize Lucky Draw Machine
 function renderDoorprizePool() {
   const pool = appGuests.filter(g => g.isCheckedIn && g.doorprize);
   const poolCount = document.getElementById("doorprizeEligibleCount");
@@ -674,7 +969,6 @@ function spinDoorprize() {
 
     if (counter > 35) {
       clearInterval(interval);
-      // Pick final winner
       const winner = pool[Math.floor(Math.random() * pool.length)];
       roller.textContent = `#${winner.doorprize}`;
       winnerInfo.innerHTML = `
@@ -683,7 +977,6 @@ function spinDoorprize() {
       `;
       isSpinning = false;
 
-      // Confetti & Fanfare
       SoundFX.playFanfare();
       if (window.confetti) {
         confetti({
@@ -696,7 +989,7 @@ function spinDoorprize() {
   }, 70);
 }
 
-// 8. Export to CSV for undanganku.id
+// 12. Export to CSV for undanganku.id
 function exportToUndangankuCSV() {
   let csv = "Nama Tamu,Kode Unik,Kategori,Sisi,Jumlah Pax,Nomor Meja,Zona Meja,Nomor Doorprize,Catatan\n";
   appGuests.forEach(g => {
@@ -712,7 +1005,7 @@ function exportToUndangankuCSV() {
   URL.revokeObjectURL(url);
 }
 
-// 9. Add Guest Form Action
+// 13. Add Guest Form Action
 function addNewGuestFromModal() {
   const name = document.getElementById("newGuestName").value.trim();
   const category = document.getElementById("newGuestCategory").value;

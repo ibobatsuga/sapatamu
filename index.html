@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VowReception OS — Smart Wedding Management & Check-in</title>
+  <title>SapaTamu OS — Smart Wedding Management & Check-in</title>
   <link rel="stylesheet" href="assets/css/style.css">
   <!-- Vendor libraries (Bundled locally) -->
   <script src="assets/js/qrcode.min.js"></script>
@@ -18,12 +18,13 @@
     <div class="brand">
       <div class="brand-icon">❖</div>
       <div class="brand-text">
-        <h2>VowReception</h2>
+        <h2>SapaTamu</h2>
         <span>Smart Wedding OS</span>
       </div>
     </div>
 
     <ul class="nav-menu">
+      <span class="section-tag">Meja Resepsi (Hari H)</span>
       <li class="nav-item active" data-tab="dashboard">
         <button class="nav-btn" data-tab="dashboard">
           <span class="nav-icon">⊞</span>
@@ -61,6 +62,33 @@
           <span>Thermal 58mm</span>
         </button>
       </li>
+
+      <!-- Planner Studio Only Items -->
+      <li class="nav-planner-only"><span class="section-tag" style="margin-top:10px;">Planner Studio (WO)</span></li>
+      <li class="nav-item nav-planner-only" data-tab="timeline">
+        <button class="nav-btn" data-tab="timeline">
+          <span class="nav-icon">⏱️</span>
+          <span>Run-Sheet Acara</span>
+        </button>
+      </li>
+      <li class="nav-item nav-planner-only" data-tab="vendors">
+        <button class="nav-btn" data-tab="vendors">
+          <span class="nav-icon">📞</span>
+          <span>Kontak Vendor</span>
+        </button>
+      </li>
+      <li class="nav-item nav-planner-only" data-tab="checklist">
+        <button class="nav-btn" data-tab="checklist">
+          <span class="nav-icon">☑️</span>
+          <span>Checklist Resepsi</span>
+        </button>
+      </li>
+      <li class="nav-item nav-planner-only" data-tab="angpao">
+        <button class="nav-btn" data-tab="angpao">
+          <span class="nav-icon">🧧</span>
+          <span>Titipan Angpao</span>
+        </button>
+      </li>
     </ul>
 
     <div class="sidebar-footer">
@@ -80,6 +108,11 @@
       </div>
 
       <div class="topbar-right">
+        <!-- Dual Workspace Mode Switcher -->
+        <button class="mode-switch-pill reception" id="modeSwitchBtn" onclick="switchWorkspaceMode(currentMode === 'reception' ? 'planner' : 'reception')">
+          🎯 Mode: <strong>Resepsionis (Hari-H)</strong>
+        </button>
+
         <!-- Quick Search -->
         <div class="search-box">
           <span class="search-icon">🔍</span>
@@ -94,9 +127,9 @@
 
         <!-- User Profile -->
         <div class="user-profile">
-          <div class="user-avatar">AD</div>
+          <div class="user-avatar">ST</div>
           <div class="user-info">
-            <span class="user-name">Reception Desk</span>
+            <span class="user-name">SapaTamu Desk</span>
             <span class="user-role">Frontline Admin</span>
           </div>
         </div>
@@ -186,9 +219,7 @@
                 <div class="legend-item"><span class="legend-dot dot-awaiting"></span> Total Estimasi</div>
               </div>
             </div>
-            <div class="bar-chart-container" id="barChartContainer">
-              <!-- Dynamically populated -->
-            </div>
+            <div class="bar-chart-container" id="barChartContainer"></div>
           </div>
 
           <div class="floor-card">
@@ -237,9 +268,7 @@
                 <th>Aksi</th>
               </tr>
             </thead>
-            <tbody id="guestTableBody">
-              <!-- Populated by JS -->
-            </tbody>
+            <tbody id="guestTableBody"></tbody>
           </table>
         </div>
       </section>
@@ -323,9 +352,7 @@
                 <th>Aksi</th>
               </tr>
             </thead>
-            <tbody id="guestTableBodyTab">
-              <!-- Re-used from JS -->
-            </tbody>
+            <tbody id="guestTableBodyTab"></tbody>
           </table>
         </div>
       </section>
@@ -336,9 +363,7 @@
           <h2 style="font-size:1.3rem; font-weight:700;">Status Meja & Kapasitas Kursi</h2>
           <p style="font-size:0.82rem; color:var(--text-muted);">Monitoring kursi terisi secara realtime saat tamu tiba di venue.</p>
         </div>
-        <div id="tableCardsGrid" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:18px;">
-          <!-- Populated by JS -->
-        </div>
+        <div id="tableCardsGrid" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:18px;"></div>
       </section>
 
       <!-- ================= 5. TAB: STAGE DOORPRIZE ================= -->
@@ -402,6 +427,99 @@
         </div>
       </section>
 
+      <!-- ================= 7. TAB: RUN-SHEET TIMELINE (PLANNER ONLY) ================= -->
+      <section class="tab-panel" id="tab-timeline">
+        <div style="margin-bottom: 24px; display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <h2 style="font-size:1.3rem; font-weight:700;">Run-Sheet / Master Rundown Hari H</h2>
+            <p style="font-size:0.82rem; color:var(--text-muted);">Jadwal terstruktur acara dari persiapan, registrasi, kirab, hingga pengundian doorprize.</p>
+          </div>
+        </div>
+        <div id="timelineListContainer" style="max-width:850px;"></div>
+      </section>
+
+      <!-- ================= 8. TAB: VENDORS (PLANNER ONLY) ================= -->
+      <section class="tab-panel" id="tab-vendors">
+        <div class="table-card">
+          <div class="table-header-bar">
+            <div class="table-title-group">
+              <h3>Direktori Kontak Vendor Darurat Hari H</h3>
+              <p>Daftar penanggung jawab teknis di venue dengan tautan cepat WhatsApp.</p>
+            </div>
+          </div>
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>No</th>
+                <th>Kategori & Vendor</th>
+                <th>Nama PIC</th>
+                <th>Nomor WhatsApp</th>
+                <th>Status di Venue</th>
+                <th>Catatan Teknis</th>
+                <th>Hubungi</th>
+              </tr>
+            </thead>
+            <tbody id="vendorTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ================= 9. TAB: CHECKLIST (PLANNER ONLY) ================= -->
+      <section class="tab-panel" id="tab-checklist">
+        <div class="table-card">
+          <div class="table-header-bar">
+            <div class="table-title-group">
+              <h3>Checklist Meja Resepsi & Produksi</h3>
+              <p>Daftar perlengkapan registrasi, printer thermal, kertas roll, dan souvenir sebelum pintu dibuka.</p>
+            </div>
+          </div>
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>No</th>
+                <th>Zona / Area</th>
+                <th>Item Perlengkapan</th>
+                <th>Jumlah</th>
+                <th>Penanggung Jawab</th>
+                <th>Status Kesiapan</th>
+              </tr>
+            </thead>
+            <tbody id="checklistTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ================= 10. TAB: ANGPAO & KADO (PLANNER ONLY) ================= -->
+      <section class="tab-panel" id="tab-angpao">
+        <div class="table-card">
+          <div class="table-header-bar">
+            <div class="table-title-group">
+              <h3>Catatan Titipan Angpao & Kado Meja Registrasi</h3>
+              <p>Log pencatatan amplop fisik, transfer digital QRIS, atau kado fisik yang diserahkan tamu saat tiba.</p>
+            </div>
+            <div class="table-actions-group">
+              <button class="btn btn-primary" onclick="openAddAngpaoModal()">
+                + Catat Titipan Baru
+              </button>
+            </div>
+          </div>
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>No</th>
+                <th>Nama Tamu / Donatur</th>
+                <th>Jenis Titipan</th>
+                <th>Tujuan Kotak / Rak</th>
+                <th>Waktu Diterima</th>
+                <th>Penerima (Kru)</th>
+                <th>Keterangan</th>
+              </tr>
+            </thead>
+            <tbody id="angpaoTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
     </main>
   </div>
 </div>
@@ -415,9 +533,7 @@
       <h3>Informasi Tamu & Tempat Duduk</h3>
       <button class="modal-close" onclick="closeCheckInModal()">✕</button>
     </div>
-    <div class="modal-body" id="checkInModalBody">
-      <!-- Dynamic -->
-    </div>
+    <div class="modal-body" id="checkInModalBody"></div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeCheckInModal()">Tutup</button>
       <button class="btn btn-primary" onclick="printCurrentGuestReceipt()">
@@ -435,9 +551,7 @@
       <button class="modal-close" onclick="closeReceiptModal()">✕</button>
     </div>
     <div class="modal-body">
-      <div class="receipt-wrapper" id="virtualReceiptContainer">
-        <!-- Rendered 58mm Paper -->
-      </div>
+      <div class="receipt-wrapper" id="virtualReceiptContainer"></div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeReceiptModal()">Tutup</button>
@@ -513,6 +627,48 @@
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeAddGuestModal()">Batal</button>
       <button class="btn btn-primary" onclick="addNewGuestFromModal()">Simpan & Generate Kode</button>
+    </div>
+  </div>
+</div>
+
+<!-- 5. Add Angpao Record Modal -->
+<div class="modal-overlay" id="addAngpaoModal">
+  <div class="modal-window">
+    <div class="modal-header">
+      <h3>Catat Titipan Angpao / Kado</h3>
+      <button class="modal-close" onclick="closeAddAngpaoModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Nama Tamu / Donatur *</label>
+        <input type="text" class="form-control" id="angpaoGuestName" placeholder="Nama yang tertera pada amplop/kado">
+      </div>
+      <div class="form-group">
+        <label>Jenis Titipan</label>
+        <select class="form-control" id="angpaoType">
+          <option value="Amplop Fisik">Amplop Fisik (Tunai / Masuk Kotak)</option>
+          <option value="QRIS / Digital Transfer">QRIS / Digital Transfer</option>
+          <option value="Kado Fisik">Kado Fisik (Paket / Hadiah)</option>
+        </select>
+      </div>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+        <div class="form-group">
+          <label>Kotak / Rak Titipan</label>
+          <input type="text" class="form-control" id="angpaoBoxCode" placeholder="Kotak A / Rak #01">
+        </div>
+        <div class="form-group">
+          <label>Nama Penerima (Kru)</label>
+          <input type="text" class="form-control" id="angpaoReceiver" placeholder="Nama kru penerima">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Keterangan Tambahan</label>
+        <input type="text" class="form-control" id="angpaoNotes" placeholder="Catatan tambahan bila ada...">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeAddAngpaoModal()">Batal</button>
+      <button class="btn btn-primary" onclick="addNewAngpaoRecord()">Simpan Catatan</button>
     </div>
   </div>
 </div>

@@ -247,8 +247,11 @@
               <p>Status kehadiran langsung disinkronkan saat scan QR undangan digital.</p>
             </div>
             <div class="table-actions-group">
-              <button class="btn btn-outline" onclick="exportToUndangankuCSV()">
-                📥 Export ke undanganku.id
+              <button class="btn btn-outline" onclick="triggerCSVImport()" title="Unggah file CSV daftar tamu">
+                📤 Import CSV
+              </button>
+              <button class="btn btn-outline" onclick="exportToUndangankuCSV()" title="Unduh CSV untuk dibagikan ke undanganku.id">
+                📥 Export CSV
               </button>
               <button class="btn btn-primary" onclick="switchTab('scanner')">
                 📷 Buka Scanner
@@ -321,18 +324,27 @@
           <div class="table-header-bar">
             <div class="table-title-group">
               <h3>Manajemen Tamu Undangan</h3>
-              <p>Daftar lengkap kode unik yang di-generate untuk undangan digital undanganku.id</p>
+              <p>Daftar lengkap tamu & kode unik untuk integrasi undangan digital undanganku.id</p>
             </div>
             <div class="table-actions-group">
-              <select class="form-control" id="filterCategorySelect" style="width:160px; padding:7px 10px;" onchange="renderGuestTable()">
+              <input type="file" id="csvFileInput" accept=".csv" style="display:none;" onchange="handleCSVFileImport(event)">
+
+              <select class="form-control" id="filterCategorySelect" style="width:150px; padding:7px 10px;" onchange="renderGuestTable()">
                 <option value="ALL">Semua Kategori</option>
                 <option value="VIP">VIP</option>
                 <option value="Keluarga">Keluarga</option>
                 <option value="Rekan">Rekan</option>
                 <option value="Sahabat">Sahabat</option>
               </select>
-              <button class="btn btn-outline" onclick="exportToUndangankuCSV()">
+
+              <button class="btn btn-outline" onclick="triggerCSVImport()" title="Unggah file CSV daftar tamu dari Excel atau undanganku.id">
+                📤 Import CSV
+              </button>
+              <button class="btn btn-outline" onclick="exportToUndangankuCSV()" title="Unduh CSV untuk dibagikan ke undanganku.id">
                 📥 Export CSV
+              </button>
+              <button class="btn btn-outline" onclick="downloadCSVTemplate()" title="Unduh format template Excel/CSV">
+                📄 Template
               </button>
               <button class="btn btn-primary" onclick="openAddGuestModal()">
                 + Tambah Tamu

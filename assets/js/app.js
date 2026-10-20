@@ -991,18 +991,162 @@ function spinDoorprize() {
 
 // 12. Export to CSV for undanganku.id
 function exportToUndangankuCSV() {
-  let csv = "Nama Tamu,Kode Unik,Kategori,Sisi,Jumlah Pax,Nomor Meja,Zona Meja,Nomor Doorprize,Catatan\n";
+  let csv = "Nama Tamu,Kode Unik,Kategori,Sisi,Jumlah Pax,Nomor Meja,Zona Meja,Nomor Doorprize,Status Hadir,Waktu Hadir,Catatan\n";
   appGuests.forEach(g => {
-    csv += `"${g.name}","${g.code}","${g.category}","${g.side}",${g.pax},"${g.table || ''}","${g.seatZone || ''}","${g.doorprize || ''}","${g.notes || ''}"\n`;
+    csv += `"${g.name}","${g.code}","${g.category}","${g.side}",${g.pax},"${g.table || ''}","${g.seatZone || ''}","${g.doorprize || ''}","${g.isCheckedIn ? 'Hadir' : 'Belum Hadir'}","${g.checkedInAt || ''}","${g.notes || ''}"\n`;
   });
 
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `daftar_tamu_undanganku_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.download = `daftar_tamu_sapatamu_${new Date().toISOString().slice(0, 10)}.csv`;
   a.click();
   URL.revokeObjectURL(url);
+  showToast("Export Berhasil", "Daftar tamu berhasil diunduh sebagai file CSV", "success");
+}
+
+// 12b. Download Blank CSV Template
+function downloadCSVTemplate() {
+  const sample = "Nama Tamu,Kategori,Sisi,Jumlah Pax,Nomor Meja,Catatan\n" +
+    '"Bpk. Ahmad Subagyo & Istri","VIP","Keluarga Pria",2,"01","Meja baris depan"\n' +
+    '"Ibu Ratna Juwita","Keluarga","Keluarga Wanita",1,"02",""\n' +
+    '"Sdr. Kevin Pratama","Sahabat","Keluarga Pria",2,"06","Groomsman"\n' +
+    '"Dr. Maya Kusuma","Rekan","Bersama",1,"05","Alergi seafood"';
+
+  const blob = new Blob([sample], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "template_daftar_tamu_sapatamu.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// 12c. Robust CSV Parser
+function parseCSVText(text) {
+  const lines = text.split(/\r\n|\n/).filter(line => line.trim().length > 0);
+  if (lines.length < 2) return [];
+
+  // Parse CSV line taking quotes into account
+  const parseLine = (line) => {
+    const row = [];
+    let insideQuote = false;
+    let entry = "";
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      if (char === '"') {
+        if (insideQuote && line[i + 1] === '"') {
+          entry += '"';
+          i++;
+        } else {
+          insideQuote = !insideQuote;
+        }
+      } else if (char === ',' && !insideQuote) {
+        row.push(entry.trim());
+        entry = "";
+      } else {
+        entry += char;
+      }
+    }
+    row.push(entry.trim());
+    return row;
+  };
+
+  const headers = parseLine(lines[0]).map(h => h.toLowerCase().replace(/[^a-z0-9]/g, ''));
+  const results = [];
+
+  for (let i = 1; i < lines.length; i++) {
+    const values = parseLine(lines[i]);
+    if (values.length === 0 || (values.length === 1 && !values[0])) continue;
+
+    const rowObj = {};
+    headers.forEach((header, idx) => {
+      rowObj[header] = values[idx] || "";
+    });
+    results.push(rowObj);
+  }
+  return results;
+}
+
+// 12d. Handle CSV File Import
+function triggerCSVImport() {
+  const fileInput = document.getElementById("csvFileInput");
+  if (fileInput) {
+    fileInput.value = "";
+    fileInput.click();
+  }
+}
+
+function handleCSVFileImport(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const content = e.target.result;
+      const rows = parseCSVText(content);
+
+      if (rows.length === 0) {
+        alert("File CSV kosong atau format baris tidak valid!");
+        return;
+      }
+
+      let importedCount = 0;
+      let startDoorprizeNum = 1000 + appGuests.length + 1;
+
+      rows.forEach(r => {
+        // Resolve field mappings flexibly
+        const name = r.namatamu || r.nama || r.name || r.guestname || "";
+        if (!name) return; // Skip rows without name
+
+        const category = r.kategori || r.category || "Rekan";
+        const side = r.sisi || r.side || "Bersama";
+        const pax = parseInt(r.jumlahpax || r.pax || r.qty || "1", 10) || 1;
+        const table = r.nomormeja || r.meja || r.table || "";
+        const seatZone = r.zonameja || r.zona || (table ? `Area Meja ${table}` : "Area Reguler");
+        const notes = r.catatan || r.notes || r.keterangan || "";
+        const code = r.kodeunik || r.kode || r.code || generateGuestCode();
+        const doorprize = r.nomordoorprize || r.doorprize || `DP-${startDoorprizeNum++}`;
+
+        // Check if guest with same code or name already exists
+        const existingIdx = appGuests.findIndex(g => g.code.toLowerCase() === code.toLowerCase() || g.name.toLowerCase() === name.toLowerCase());
+
+        const guestData = {
+          id: "g_" + Date.now() + "_" + Math.random().toString(36).substr(2, 4),
+          name,
+          code,
+          category: ["VIP", "Keluarga", "Rekan", "Sahabat"].includes(category) ? category : "Rekan",
+          side: ["Keluarga Pria", "Keluarga Wanita", "Bersama"].includes(side) ? side : "Bersama",
+          pax,
+          table,
+          seatZone,
+          isCheckedIn: false,
+          checkedInAt: null,
+          doorprize,
+          souvenirClaimed: false,
+          notes
+        };
+
+        if (existingIdx >= 0) {
+          // Update existing
+          appGuests[existingIdx] = { ...appGuests[existingIdx], ...guestData, id: appGuests[existingIdx].id };
+        } else {
+          // Append new
+          appGuests.push(guestData);
+        }
+        importedCount++;
+      });
+
+      persistState();
+      renderAll();
+      showToast("Import CSV Selesai", `Berhasil memproses ${importedCount} data tamu ke dalam sistem!`, "success");
+    } catch (err) {
+      alert("Gagal membaca file CSV: " + err.message);
+    }
+  };
+  reader.readAsText(file, "UTF-8");
 }
 
 // 13. Add Guest Form Action

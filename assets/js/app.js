@@ -244,14 +244,15 @@ function switchWorkspaceMode(mode) {
 function applyWorkspaceModeUI() {
   const modeBtn = document.getElementById("modeSwitchBtn");
   const plannerNavItems = document.querySelectorAll(".nav-planner-only");
+  const remotePill = document.getElementById("remotePill");
 
   if (currentMode === "reception") {
     if (modeBtn) {
       modeBtn.innerHTML = "🎯 Mode: <strong>Resepsionis (Hari-H)</strong>";
       modeBtn.className = "mode-switch-pill reception";
     }
+    if (remotePill) remotePill.style.display = "flex";
     plannerNavItems.forEach(el => el.style.display = "none");
-    // If currently on a planner tab, redirect to dashboard
     if (["timeline", "vendors", "checklist", "angpao"].includes(activeTab)) {
       switchTab("dashboard");
     }
@@ -260,8 +261,34 @@ function applyWorkspaceModeUI() {
       modeBtn.innerHTML = "📋 Mode: <strong>Planner Studio (WO)</strong>";
       modeBtn.className = "mode-switch-pill planner";
     }
+    // Remote is restricted to Reception mode only!
+    if (remotePill) remotePill.style.display = "none";
+    closeRemoteModal();
     plannerNavItems.forEach(el => el.style.display = "block");
   }
+
+  // Notify any connected remote devices about mode status
+  if (window.SapaRemote && SapaRemote.isHost) {
+    SapaRemote.broadcastHostState();
+  }
+}
+
+// Remote Modal Handlers (Restricted to Reception Mode)
+function openRemoteModal() {
+  if (currentMode !== "reception") {
+    alert("Fitur Remote Smartphone dibatasi dan hanya dapat digunakan pada Mode Resepsionis (Hari-H). Silakan alihkan mode terlebih dahulu.");
+    return;
+  }
+  if (window.SapaRemote) {
+    SapaRemote.updateHostPairingQR();
+  }
+  const modal = document.getElementById("remoteModal");
+  if (modal) modal.classList.add("active");
+}
+
+function closeRemoteModal() {
+  const modal = document.getElementById("remoteModal");
+  if (modal) modal.classList.remove("active");
 }
 
 // Initialize Application
@@ -270,6 +297,9 @@ document.addEventListener("DOMContentLoaded", () => {
   setupBarcodeGunListener();
   setupPrinterEvents();
   applyWorkspaceModeUI();
+  if (window.SapaRemote) {
+    SapaRemote.init();
+  }
   renderAll();
 });
 

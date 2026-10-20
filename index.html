@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VowReception OS — Smart Wedding Management & Check-in</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <!-- Vendor libraries (Bundled locally) -->
+  <script src="assets/js/qrcode.min.js"></script>
+  <script src="assets/js/html5-qrcode.min.js"></script>
+  <script src="assets/js/confetti.min.js"></script>
+</head>
+<body>
+
+<div class="app-container">
+  <!-- ================= SIDEBAR ================= -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon">❖</div>
+      <div class="brand-text">
+        <h2>VowReception</h2>
+        <span>Smart Wedding OS</span>
+      </div>
+    </div>
+
+    <ul class="nav-menu">
+      <li class="nav-item active" data-tab="dashboard">
+        <button class="nav-btn" data-tab="dashboard">
+          <span class="nav-icon">⊞</span>
+          <span>Dashboard</span>
+        </button>
+      </li>
+      <li class="nav-item" data-tab="scanner">
+        <button class="nav-btn" data-tab="scanner">
+          <span class="nav-icon">⚲</span>
+          <span>Front Desk (Scan)</span>
+          <span class="nav-badge" id="navCheckInBadge">Live</span>
+        </button>
+      </li>
+      <li class="nav-item" data-tab="guests">
+        <button class="nav-btn" data-tab="guests">
+          <span class="nav-icon">👥</span>
+          <span>Daftar Tamu</span>
+        </button>
+      </li>
+      <li class="nav-item" data-tab="seating">
+        <button class="nav-btn" data-tab="seating">
+          <span class="nav-icon">🪑</span>
+          <span>Meja & Kursi</span>
+        </button>
+      </li>
+      <li class="nav-item" data-tab="doorprize">
+        <button class="nav-btn" data-tab="doorprize">
+          <span class="nav-icon">🎁</span>
+          <span>Stage Doorprize</span>
+        </button>
+      </li>
+      <li class="nav-item" data-tab="printer">
+        <button class="nav-btn" data-tab="printer">
+          <span class="nav-icon">🖨️</span>
+          <span>Thermal 58mm</span>
+        </button>
+      </li>
+    </ul>
+
+    <div class="sidebar-footer">
+      <div class="event-pill">
+        <div class="event-pill-title" id="sideEventTitle">Kevin & Nadya</div>
+        <div class="event-pill-sub" id="sideEventDate">24 Okt 2026 • Pullman</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ================= MAIN WRAPPER ================= -->
+  <div class="main-wrapper">
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="page-heading">
+        <h1 id="topbarTitle">Wedding Reception Dashboard</h1>
+      </div>
+
+      <div class="topbar-right">
+        <!-- Quick Search -->
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="globalSearchInput" placeholder="Cari nama, meja, kode..." oninput="renderGuestTable()">
+        </div>
+
+        <!-- Bluetooth Thermal Printer Status -->
+        <div class="printer-pill disconnected" id="printerStatusPill" onclick="togglePrinterConnect()" title="Klik untuk pairing Bluetooth printer">
+          <span class="printer-dot"></span>
+          <span id="printerDeviceLabel">BT Disconnected</span>
+        </div>
+
+        <!-- User Profile -->
+        <div class="user-profile">
+          <div class="user-avatar">AD</div>
+          <div class="user-info">
+            <span class="user-name">Reception Desk</span>
+            <span class="user-role">Frontline Admin</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Body -->
+    <main class="content-body">
+
+      <!-- ================= 1. TAB: DASHBOARD ================= -->
+      <section class="tab-panel active" id="tab-dashboard">
+        <!-- KPI Row (Homel-inspired Pastel Cards) -->
+        <div class="kpi-grid">
+          <!-- Card 1: Blue -->
+          <div class="kpi-card blue">
+            <div class="kpi-top">
+              <div class="kpi-icon-wrap">📥</div>
+              <button class="kpi-more" onclick="switchTab('guests')">⋮</button>
+            </div>
+            <div class="kpi-body">
+              <div class="kpi-label">Today's Check-in</div>
+              <div class="kpi-value" id="kpiCheckedIn">0</div>
+              <div class="kpi-footer" id="kpiCheckedInSub">0% dari target pax</div>
+            </div>
+          </div>
+
+          <!-- Card 2: Green -->
+          <div class="kpi-card green">
+            <div class="kpi-top">
+              <div class="kpi-icon-wrap">⏳</div>
+              <button class="kpi-more" onclick="switchTab('guests')">⋮</button>
+            </div>
+            <div class="kpi-body">
+              <div class="kpi-label">Belum Hadir</div>
+              <div class="kpi-value" id="kpiAwaiting">0</div>
+              <div class="kpi-footer" id="kpiAwaitingSub">Menunggu kehadiran</div>
+            </div>
+          </div>
+
+          <!-- Card 3: Pink -->
+          <div class="kpi-card pink">
+            <div class="kpi-top">
+              <div class="kpi-icon-wrap">💌</div>
+              <button class="kpi-more" onclick="switchTab('guests')">⋮</button>
+            </div>
+            <div class="kpi-body">
+              <div class="kpi-label">Total Tamu (Pax)</div>
+              <div class="kpi-value" id="kpiTotalGuests">0</div>
+              <div class="kpi-footer" id="kpiTotalGuestsSub">Terdaftar di sistem</div>
+            </div>
+          </div>
+
+          <!-- Card 4: Yellow -->
+          <div class="kpi-card yellow">
+            <div class="kpi-top">
+              <div class="kpi-icon-wrap">🎁</div>
+              <button class="kpi-more">⋮</button>
+            </div>
+            <div class="kpi-body">
+              <div class="kpi-label">Souvenir Diserahkan</div>
+              <div class="kpi-value" id="kpiSouvenir">0</div>
+              <div class="kpi-footer" id="kpiSouvenirSub">Kupon terambil</div>
+            </div>
+          </div>
+
+          <!-- Card 5: Purple -->
+          <div class="kpi-card purple">
+            <div class="kpi-top">
+              <div class="kpi-icon-wrap">🎰</div>
+              <button class="kpi-more" onclick="switchTab('doorprize')">⋮</button>
+            </div>
+            <div class="kpi-body">
+              <div class="kpi-label">Doorprize Pool</div>
+              <div class="kpi-value" id="kpiDoorprize">0</div>
+              <div class="kpi-footer" id="kpiDoorprizeSub">Kupon aktif diundi</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Analytics Row -->
+        <div class="analytics-grid">
+          <div class="chart-card">
+            <div class="card-header-row">
+              <h3>Kecepatan Kehadiran Tamu (Arrival Velocity)</h3>
+              <div class="chart-legend">
+                <div class="legend-item"><span class="legend-dot dot-checkedin"></span> Hadir</div>
+                <div class="legend-item"><span class="legend-dot dot-awaiting"></span> Total Estimasi</div>
+              </div>
+            </div>
+            <div class="bar-chart-container" id="barChartContainer">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+          <div class="floor-card">
+            <div class="card-header-row">
+              <h3>Kapasitas Kursi (Occupancy)</h3>
+            </div>
+            <div class="gauge-wrapper">
+              <svg class="gauge-svg" viewBox="0 0 200 110">
+                <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#E2E8F0" stroke-width="18" stroke-linecap="round"/>
+                <path d="M 20 100 A 80 80 0 0 1 150 40" fill="none" stroke="#2563EB" stroke-width="18" stroke-linecap="round"/>
+              </svg>
+              <div class="gauge-score">
+                <div class="score-num" id="gaugePercentNum">0%</div>
+                <div class="score-label">Kursi Terisi di Ballroom</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Guest List Table -->
+        <div class="table-card">
+          <div class="table-header-bar">
+            <div class="table-title-group">
+              <h3>Daftar Tamu Undangan</h3>
+              <p>Status kehadiran langsung disinkronkan saat scan QR undangan digital.</p>
+            </div>
+            <div class="table-actions-group">
+              <button class="btn btn-outline" onclick="exportToUndangankuCSV()">
+                📥 Export ke undanganku.id
+              </button>
+              <button class="btn btn-primary" onclick="switchTab('scanner')">
+                📷 Buka Scanner
+              </button>
+            </div>
+          </div>
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>No</th>
+                <th>Tamu Undangan</th>
+                <th>Tempat Duduk</th>
+                <th>Pax</th>
+                <th>Kategori</th>
+                <th>Status</th>
+                <th>No Doorprize</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="guestTableBody">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ================= 2. TAB: FRONT DESK SCANNER ================= -->
+      <section class="tab-panel" id="tab-scanner">
+        <div class="scanner-container">
+          <div class="scanner-box">
+            <h3 style="margin-bottom: 6px; font-weight:700;">Scan QR Code Undangan</h3>
+            <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:18px;">
+              Arahkan kamera ke QR Code di HP tamu atau gunakan Barcode Gun Scanner.
+            </p>
+
+            <div class="scanner-viewport">
+              <div id="reader"></div>
+            </div>
+            <div id="cameraNotice" style="font-size:0.75rem; color:#64748B; margin-top:8px; text-align:center;"></div>
+
+            <!-- Manual Barcode Input Fallback -->
+            <div class="scanner-manual-input">
+              <input type="text" id="manualCodeInput" placeholder="Input kode (cth: KN-8821)..." onkeydown="if(event.key==='Enter') { processGuestCheckInByCode(this.value); this.value=''; }">
+              <button class="btn btn-primary" onclick="const el=document.getElementById('manualCodeInput'); processGuestCheckInByCode(el.value); el.value='';">
+                Check-in
+              </button>
+            </div>
+          </div>
+
+          <div class="scan-history-card">
+            <h3 style="margin-bottom:14px; font-weight:700;">Petunjuk Operasional Meja Resepsi</h3>
+            <div style="font-size:0.85rem; color:#475569; line-height:1.6;">
+              <p><strong>1. Barcode Gun Support:</strong> Anda dapat langsung menembakkan barcode scanner fisik ke layar HP tamu tanpa perlu membuka kamera tablet.</p>
+              <p style="margin-top:10px;"><strong>2. Auto-Print 58mm:</strong> Jika printer thermal Bluetooth terhubung, struk tempat duduk dan kupon doorprize akan langsung tercetak otomatis dalam &lt; 0.5 detik.</p>
+              <p style="margin-top:10px;"><strong>3. Anti Double Check-in:</strong> Sistem memicu alarm suara peringatan jika tamu mencoba scan dua kali.</p>
+            </div>
+
+            <div style="margin-top:24px; padding:16px; background:#F8FAFC; border-radius:12px; border:1px solid var(--border-light);">
+              <div style="font-size:0.82rem; font-weight:700; color:#0F172A; margin-bottom:6px;">Status Printer Bluetooth</div>
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:0.82rem; color:#64748B;" id="printerDetailText">58mm Thermal ESC/POS</span>
+                <button class="btn btn-outline btn-sm" onclick="togglePrinterConnect()">Hubungkan</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= 3. TAB: GUESTS ================= -->
+      <section class="tab-panel" id="tab-guests">
+        <div class="table-card">
+          <div class="table-header-bar">
+            <div class="table-title-group">
+              <h3>Manajemen Tamu Undangan</h3>
+              <p>Daftar lengkap kode unik yang di-generate untuk undangan digital undanganku.id</p>
+            </div>
+            <div class="table-actions-group">
+              <select class="form-control" id="filterCategorySelect" style="width:160px; padding:7px 10px;" onchange="renderGuestTable()">
+                <option value="ALL">Semua Kategori</option>
+                <option value="VIP">VIP</option>
+                <option value="Keluarga">Keluarga</option>
+                <option value="Rekan">Rekan</option>
+                <option value="Sahabat">Sahabat</option>
+              </select>
+              <button class="btn btn-outline" onclick="exportToUndangankuCSV()">
+                📥 Export CSV
+              </button>
+              <button class="btn btn-primary" onclick="openAddGuestModal()">
+                + Tambah Tamu
+              </button>
+            </div>
+          </div>
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>No</th>
+                <th>Tamu Undangan</th>
+                <th>Tempat Duduk</th>
+                <th>Pax</th>
+                <th>Kategori</th>
+                <th>Status</th>
+                <th>No Doorprize</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="guestTableBodyTab">
+              <!-- Re-used from JS -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ================= 4. TAB: SEATING ================= -->
+      <section class="tab-panel" id="tab-seating">
+        <div style="margin-bottom: 24px;">
+          <h2 style="font-size:1.3rem; font-weight:700;">Status Meja & Kapasitas Kursi</h2>
+          <p style="font-size:0.82rem; color:var(--text-muted);">Monitoring kursi terisi secara realtime saat tamu tiba di venue.</p>
+        </div>
+        <div id="tableCardsGrid" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:18px;">
+          <!-- Populated by JS -->
+        </div>
+      </section>
+
+      <!-- ================= 5. TAB: STAGE DOORPRIZE ================= -->
+      <section class="tab-panel" id="tab-doorprize">
+        <div class="doorprize-stage">
+          <h2>★ PENGUNDIAN DOORPRIZE WEDDING ★</h2>
+          <p style="color:#94A3B8; font-size:0.95rem; margin-top:8px;" id="doorprizeEligibleCount">
+            0 Tamu Hadir Berhak Mengikuti Undian
+          </p>
+
+          <div class="doorprize-roller" id="doorprizeDisplay">
+            #DP-????
+          </div>
+
+          <div id="doorprizeWinnerInfo" style="font-size:1.2rem; min-height:48px; color:#FBBF24; margin-bottom:24px;">
+            Tekan tombol di bawah untuk memulai undian acak
+          </div>
+
+          <button class="btn btn-primary" style="background:#F59E0B; color:#000; font-size:1.1rem; padding:14px 32px; border-radius:30px;" onclick="spinDoorprize()">
+            🎲 PUTAR UNDIAN SEKARANG
+          </button>
+        </div>
+      </section>
+
+      <!-- ================= 6. TAB: PRINTER SETTINGS ================= -->
+      <section class="tab-panel" id="tab-printer">
+        <div class="table-card" style="padding:28px; max-width:650px;">
+          <h3 style="font-weight:700; margin-bottom:12px;">Konfigurasi Thermal Printer 58mm</h3>
+          <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:20px;">
+            Aplikasi berkomunikasi langsung dengan printer thermal Bluetooth portabel menggunakan protokol ESC/POS tanpa driver instalasi tambahan.
+          </p>
+
+          <div style="background:#F8FAFC; border:1px solid var(--border-light); border-radius:12px; padding:18px; margin-bottom:20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <strong style="font-size:0.92rem; display:block;">Koneksi Bluetooth</strong>
+                <span style="font-size:0.78rem; color:var(--text-muted);">Panda, Iware, Zjiang, Xprinter, Sunmi 58mm</span>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="togglePrinterConnect()">
+                Pair Bluetooth
+              </button>
+            </div>
+          </div>
+
+          <div style="margin-bottom:20px;">
+            <label style="display:flex; align-items:center; gap:10px; font-size:0.88rem; font-weight:600; cursor:pointer;">
+              <input type="checkbox" id="autoPrintCheck" checked onchange="Thermal58.autoPrintEnabled = this.checked">
+              Cetak Struk Otomatis Sesaat Setelah QR Di-scan (Auto-Print)
+            </label>
+          </div>
+
+          <div style="border-top:1px solid var(--border-light); padding-top:20px;">
+            <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:10px;">Test Cetak Struk 58mm</h4>
+            <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:14px;">
+              Uji coba output teks, garis pemisah, penataan meja, dan kupon undian.
+            </p>
+            <button class="btn btn-outline" onclick="openVirtualReceiptModal(appGuests[0])">
+              🖨️ Cetak Sampel Struk 58mm
+            </button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- ================= MODALS ================= -->
+
+<!-- 1. Check-In Result Pop-Up Modal -->
+<div class="modal-overlay" id="checkInModal">
+  <div class="modal-window">
+    <div class="modal-header">
+      <h3>Informasi Tamu & Tempat Duduk</h3>
+      <button class="modal-close" onclick="closeCheckInModal()">✕</button>
+    </div>
+    <div class="modal-body" id="checkInModalBody">
+      <!-- Dynamic -->
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeCheckInModal()">Tutup</button>
+      <button class="btn btn-primary" onclick="printCurrentGuestReceipt()">
+        🖨️ Cetak Struk (58mm)
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- 2. Virtual 58mm Receipt Preview Modal -->
+<div class="modal-overlay" id="receiptModal">
+  <div class="modal-window" style="max-width:380px;">
+    <div class="modal-header">
+      <h3>Struk Thermal 58mm</h3>
+      <button class="modal-close" onclick="closeReceiptModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="receipt-wrapper" id="virtualReceiptContainer">
+        <!-- Rendered 58mm Paper -->
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeReceiptModal()">Tutup</button>
+      <button class="btn btn-primary" onclick="triggerBrowserPrint()">Cetak / Simpan PDF</button>
+    </div>
+  </div>
+</div>
+
+<!-- 3. QR Code Viewer Modal -->
+<div class="modal-overlay" id="qrModal">
+  <div class="modal-window" style="max-width:340px; text-align:center;">
+    <div class="modal-header">
+      <h3>QR Undangan Digital</h3>
+      <button class="modal-close" onclick="closeQRModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="qrCanvasWrapper" style="display:flex; justify-content:center; margin:14px 0;"></div>
+      <h4 id="qrModalGuestName" style="font-size:1.1rem; font-weight:700;">Nama Tamu</h4>
+      <p id="qrModalGuestCode" style="font-size:0.8rem; color:#64748B; font-family:var(--font-mono); margin-top:4px;"></p>
+    </div>
+    <div class="modal-footer" style="justify-content:center;">
+      <button class="btn btn-primary" onclick="closeQRModal()">Selesai</button>
+    </div>
+  </div>
+</div>
+
+<!-- 4. Add Guest Modal -->
+<div class="modal-overlay" id="addGuestModal">
+  <div class="modal-window">
+    <div class="modal-header">
+      <h3>Tambah Tamu Undangan Baru</h3>
+      <button class="modal-close" onclick="closeAddGuestModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Nama Tamu *</label>
+        <input type="text" class="form-control" id="newGuestName" placeholder="Contoh: Bpk. Kurniawan & Keluarga">
+      </div>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+        <div class="form-group">
+          <label>Kategori</label>
+          <select class="form-control" id="newGuestCategory">
+            <option value="VIP">VIP</option>
+            <option value="Keluarga">Keluarga</option>
+            <option value="Rekan">Rekan</option>
+            <option value="Sahabat">Sahabat</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Pihak Keluarga</label>
+          <select class="form-control" id="newGuestSide">
+            <option value="Keluarga Pria">Keluarga Pria</option>
+            <option value="Keluarga Wanita">Keluarga Wanita</option>
+            <option value="Bersama">Bersama</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+        <div class="form-group">
+          <label>Jumlah Pax</label>
+          <input type="number" class="form-control" id="newGuestPax" value="2" min="1" max="10">
+        </div>
+        <div class="form-group">
+          <label>Nomor Meja</label>
+          <input type="text" class="form-control" id="newGuestTable" placeholder="01, 02, dsb.">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Catatan Khusus (Alergi / Kursi Roda / dsb.)</label>
+        <input type="text" class="form-control" id="newGuestNotes" placeholder="Opsional...">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeAddGuestModal()">Batal</button>
+      <button class="btn btn-primary" onclick="addNewGuestFromModal()">Simpan & Generate Kode</button>
+    </div>
+  </div>
+</div>
+
+<!-- Core Scripts -->
+<script src="assets/js/sound.js"></script>
+<script src="assets/js/printer.js"></script>
+<script src="assets/js/app.js"></script>
+
+</body>
+</html>

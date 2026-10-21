@@ -919,21 +919,16 @@ function updateSortHeadersUI() {
   document.querySelectorAll(".sortable-header").forEach(th => {
     const col = th.getAttribute("data-sort");
     th.classList.remove("sorted-asc", "sorted-desc");
-    const icon = th.querySelector(".sort-icon");
-    if (!icon) return;
 
     if (col === guestSort.column) {
       if (guestSort.direction === 'asc') {
         th.classList.add("sorted-asc");
-        icon.textContent = "▲";
-        th.setAttribute("title", `Diurutkan ${col} (Naik/A-Z). Klik untuk membalikkan urutan.`);
+        th.setAttribute("title", `Diurutkan ${col} (A-Z / Terkecil). Klik untuk urutan sebaliknya.`);
       } else {
         th.classList.add("sorted-desc");
-        icon.textContent = "▼";
-        th.setAttribute("title", `Diurutkan ${col} (Turun/Z-A). Klik untuk membalikkan urutan.`);
+        th.setAttribute("title", `Diurutkan ${col} (Z-A / Terbesar). Klik untuk urutan sebaliknya.`);
       }
     } else {
-      icon.textContent = "⇅";
       th.setAttribute("title", `Klik untuk mengurutkan daftar berdasar kolom ini`);
     }
   });

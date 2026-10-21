@@ -438,6 +438,7 @@ function switchWorkspaceMode(mode) {
 function applyWorkspaceModeUI() {
   const modeBtn = document.getElementById("modeSwitchBtn");
   const plannerNavItems = document.querySelectorAll(".nav-planner-only");
+  const receptionNavItems = document.querySelectorAll(".nav-reception-only");
   const remotePill = document.getElementById("remotePill");
   const segReception = document.getElementById("segModeReception");
   const segPlanner = document.getElementById("segModePlanner");
@@ -452,6 +453,8 @@ function applyWorkspaceModeUI() {
 
     if (remotePill) remotePill.style.display = "inline-flex";
     plannerNavItems.forEach(el => el.style.display = "none");
+    receptionNavItems.forEach(el => el.style.display = "block");
+
     if (["timeline", "vendors", "checklist"].includes(activeTab)) {
       switchTab("dashboard");
     }
@@ -466,11 +469,14 @@ function applyWorkspaceModeUI() {
     if (remotePill) remotePill.style.display = "none";
     closeRemoteModal();
     plannerNavItems.forEach(el => el.style.display = "block");
+    receptionNavItems.forEach(el => el.style.display = "none");
   }
 
   if (window.SapaRemote && SapaRemote.isHost) {
     SapaRemote.broadcastHostState();
   }
+
+  renderTableOccupancy();
 }
 
 // Sidebar Toggle & Collapse Handlers
@@ -1039,44 +1045,289 @@ function renderTableOccupancy() {
   const container = document.getElementById("tableCardsGrid");
   if (!container) return;
 
+  const isPlanner = currentMode === "planner";
+
+  // Dynamic header & action visibility
+  const titleEl = document.getElementById("seatingTabTitle");
+  const subEl = document.getElementById("seatingTabSubtitle");
+  const actionsEl = document.getElementById("plannerSeatingActions");
+  const statsEl = document.getElementById("plannerSeatingStats");
+
+  if (titleEl) {
+    titleEl.textContent = isPlanner ? "🪑 Setup & Tata Letak Meja Kursi (Planner Studio)" : "Status Meja & Kapasitas Kursi";
+  }
+  if (subEl) {
+    subEl.textContent = isPlanner 
+      ? "Atur tata letak meja, kapasitas kursi, zonasi VIP/Keluarga, serta alokasi tamu undangan."
+      : "Monitoring kursi terisi secara realtime saat tamu tiba di venue.";
+  }
+  if (actionsEl) {
+    actionsEl.style.display = isPlanner ? "flex" : "none";
+  }
+  if (statsEl) {
+    statsEl.style.display = isPlanner ? "grid" : "none";
+    if (isPlanner) {
+      const totalTables = appTables.length;
+      const totalSeats = appTables.reduce((acc, t) => acc + (t.capacity || 0), 0);
+      const allocatedSeats = appGuests.reduce((acc, g) => {
+        if (g.table) return acc + (g.pax || 1);
+        return acc;
+      }, 0);
+      const availableSeats = Math.max(0, totalSeats - allocatedSeats);
+      const pct = totalSeats > 0 ? Math.round((allocatedSeats / totalSeats) * 100) : 0;
+
+      const tEl = document.getElementById("statsTotalTables");
+      const sEl = document.getElementById("statsTotalSeats");
+      const aEl = document.getElementById("statsAllocatedSeats");
+      const apEl = document.getElementById("statsAllocatedPct");
+      const avEl = document.getElementById("statsAvailableSeats");
+
+      if (tEl) tEl.textContent = totalTables;
+      if (sEl) sEl.textContent = totalSeats;
+      if (aEl) aEl.textContent = allocatedSeats;
+      if (apEl) apEl.textContent = `${pct}% Kursi Terisi`;
+      if (avEl) avEl.textContent = availableSeats;
+    }
+  }
+
   container.innerHTML = appTables.map(t => {
-    const tableGuests = appGuests.filter(g => g.table === t.id.replace("T", "0") || g.table === t.id.replace("T", ""));
-    const seatedCount = tableGuests.reduce((acc, g) => acc + g.pax, 0);
-    const checkedInCount = tableGuests.filter(g => g.isCheckedIn).reduce((acc, g) => acc + g.pax, 0);
+    const tableIdClean = t.id.replace("T", "");
+    const tableGuests = appGuests.filter(g => {
+      if (!g.table) return false;
+      const gTable = g.table.toString().trim().replace(/^0+/, "");
+      const tNum = tableIdClean.replace(/^0+/, "");
+      return gTable === tNum || g.table === t.id || g.table === t.name;
+    });
+
+    const seatedCount = tableGuests.reduce((acc, g) => acc + (g.pax || 1), 0);
+    const checkedInCount = tableGuests.filter(g => g.isCheckedIn).reduce((acc, g) => acc + (g.pax || 1), 0);
     const isFull = seatedCount >= t.capacity;
 
     return `
-      <div style="background:#fff; border:1px solid var(--border-light); border-radius:14px; padding:20px; box-shadow:var(--shadow-sm);">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
-          <div>
-            <h4 style="font-size:1rem; font-weight:700;">${t.name}</h4>
-            <span style="font-size:0.75rem; color:var(--text-muted);">${t.zone}</span>
+      <div style="background:#fff; border:1px solid var(--border-light); border-radius:14px; padding:20px; box-shadow:var(--shadow-sm); display:flex; flex-direction:column; justify-content:space-between;">
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+            <div>
+              <h4 style="font-size:1.02rem; font-weight:700; color:var(--text-dark);">${t.name}</h4>
+              <span style="font-size:0.75rem; color:var(--text-muted); display:inline-block; margin-top:2px;">📍 ${t.zone}</span>
+            </div>
+            <span class="badge ${isFull ? 'badge-vip' : 'badge-family'}">
+              ${isPlanner ? `${seatedCount}/${t.capacity} Kursi` : `${checkedInCount}/${t.capacity} Hadir`}
+            </span>
           </div>
-          <span class="badge ${isFull ? 'badge-vip' : 'badge-family'}">
-            ${seatedCount}/${t.capacity} Kursi
-          </span>
-        </div>
-        <div style="background:#F1F5F9; border-radius:6px; height:8px; overflow:hidden; margin-bottom:12px;">
-          <div style="background:#2563EB; width:${Math.min(100, (checkedInCount / t.capacity) * 100)}%; height:100%;"></div>
-        </div>
-        <div style="font-size:0.75rem; color:var(--text-muted); display:flex; justify-content:space-between; margin-bottom:12px;">
-          <span>Hadir di lokasi: <strong>${checkedInCount} pax</strong></span>
-          <span>Tersisa: <strong>${Math.max(0, t.capacity - seatedCount)} kursi</strong></span>
-        </div>
-        <div style="border-top:1px dashed var(--border-light); padding-top:10px;">
-          <div style="font-size:0.72rem; font-weight:600; color:var(--text-muted); margin-bottom:6px;">Daftar Tamu di Meja Ini:</div>
-          <div style="max-height:80px; overflow-y:auto; font-size:0.75rem;">
-            ${tableGuests.length ? tableGuests.map(tg => `
-              <div style="display:flex; justify-content:space-between; margin-bottom:3px;">
-                <span>${tg.name} (${tg.pax}p)</span>
-                <span style="color:${tg.isCheckedIn ? '#16A34A' : '#94A3B8'}; font-weight:600;">${tg.isCheckedIn ? 'Hadir' : 'Menunggu'}</span>
-              </div>
-            `).join('') : '<span style="color:#94A3B8; font-style:italic;">Belum ada tamu dialokasikan</span>'}
+
+          <div style="background:#F1F5F9; border-radius:6px; height:8px; overflow:hidden; margin-bottom:10px;">
+            <div style="background:${isFull ? '#DC2626' : '#2563EB'}; width:${Math.min(100, ((isPlanner ? seatedCount : checkedInCount) / (t.capacity || 1)) * 100)}%; height:100%; transition:width 0.3s ease;"></div>
+          </div>
+
+          <div style="font-size:0.75rem; color:var(--text-muted); display:flex; justify-content:space-between; margin-bottom:12px;">
+            ${isPlanner ? `
+              <span>Teralokasi: <strong>${seatedCount} pax</strong></span>
+              <span>Sisa: <strong>${Math.max(0, t.capacity - seatedCount)} kursi</strong></span>
+            ` : `
+              <span>Hadir di lokasi: <strong>${checkedInCount} pax</strong></span>
+              <span>Belum tiba: <strong>${Math.max(0, seatedCount - checkedInCount)} pax</strong></span>
+            `}
+          </div>
+
+          <div style="border-top:1px dashed var(--border-light); padding-top:10px; margin-bottom:12px;">
+            <div style="font-size:0.72rem; font-weight:600; color:var(--text-muted); margin-bottom:6px;">
+              Tamu di Meja Ini (${tableGuests.length} Undangan):
+            </div>
+            <div style="max-height:100px; overflow-y:auto; font-size:0.75rem;">
+              ${tableGuests.length ? tableGuests.map(tg => `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; padding:3px 6px; border-radius:4px; background:#F8FAFC;">
+                  <span style="font-weight:500;">${tg.name} <small style="color:#64748B;">(${tg.pax}p)</small></span>
+                  ${isPlanner ? `
+                    <button class="btn btn-outline btn-sm" style="padding:1px 6px; font-size:0.68rem; color:#DC2626; border-color:#FECACA;" onclick="removeGuestFromTable('${tg.id}')" title="Keluarkan dari meja">✕</button>
+                  ` : `
+                    <span style="color:${tg.isCheckedIn ? '#16A34A' : '#94A3B8'}; font-weight:600; font-size:0.72rem;">${tg.isCheckedIn ? '✓ Hadir' : '○ Menunggu'}</span>
+                  `}
+                </div>
+              `).join('') : '<span style="color:#94A3B8; font-style:italic;">Belum ada tamu dialokasikan.</span>'}
+            </div>
           </div>
         </div>
+
+        ${isPlanner ? `
+          <div style="border-top:1px solid var(--border-light); padding-top:12px; margin-top:8px; display:flex; justify-content:space-between; gap:6px;">
+            <button class="btn btn-outline btn-sm" style="flex:1;" onclick="openAssignGuestModal('${t.id}')">
+              + Alokasi Tamu
+            </button>
+            <button class="btn btn-outline btn-sm" onclick="openEditTableModal('${t.id}')" title="Ubah Pengaturan Meja">
+              ✏️
+            </button>
+            <button class="btn btn-outline btn-sm" style="color:#DC2626; border-color:#FECACA;" onclick="deleteTable('${t.id}')" title="Hapus Meja Ini">
+              🗑️
+            </button>
+          </div>
+        ` : ''}
       </div>
     `;
   }).join("");
+}
+
+// Table CRUD
+function openAddTableModal() {
+  document.getElementById("tableModalEditingId").value = "";
+  document.getElementById("tableModalTitle").textContent = "Tambah Meja Baru";
+  const nextNum = appTables.length + 1;
+  const pad = nextNum < 10 ? `0${nextNum}` : nextNum;
+  document.getElementById("tableModalName").value = `Meja ${pad}`;
+  document.getElementById("tableModalCapacity").value = "10";
+  document.getElementById("tableModalZone").value = "Area Reguler";
+  document.getElementById("tableModal").classList.add("active");
+}
+
+function openEditTableModal(tableId) {
+  const t = appTables.find(x => x.id === tableId);
+  if (!t) return;
+  document.getElementById("tableModalEditingId").value = t.id;
+  document.getElementById("tableModalTitle").textContent = `Ubah Pengaturan ${t.name}`;
+  document.getElementById("tableModalName").value = t.name;
+  document.getElementById("tableModalCapacity").value = t.capacity || 10;
+  document.getElementById("tableModalZone").value = t.zone || "";
+  document.getElementById("tableModal").classList.add("active");
+}
+
+function closeTableModal() {
+  document.getElementById("tableModal").classList.remove("active");
+}
+
+function saveTableModal() {
+  const editingId = document.getElementById("tableModalEditingId").value;
+  const name = document.getElementById("tableModalName").value.trim();
+  const capacity = parseInt(document.getElementById("tableModalCapacity").value, 10) || 10;
+  const zone = document.getElementById("tableModalZone").value.trim() || "Area Utama";
+
+  if (!name) {
+    alert("Nama meja wajib diisi!");
+    return;
+  }
+
+  if (editingId) {
+    const t = appTables.find(x => x.id === editingId);
+    if (t) {
+      t.name = name;
+      t.capacity = capacity;
+      t.zone = zone;
+    }
+    showToast("Meja Diperbarui", `${name} berhasil diubah.`, "success");
+  } else {
+    const newId = "T" + (Date.now() % 10000);
+    appTables.push({
+      id: newId,
+      name,
+      capacity,
+      zone
+    });
+    showToast("Meja Ditambahkan", `${name} berhasil dibuat.`, "success");
+  }
+
+  persistState();
+  closeTableModal();
+  renderTableOccupancy();
+}
+
+function deleteTable(tableId) {
+  const t = appTables.find(x => x.id === tableId);
+  if (!t) return;
+  if (!confirm(`Hapus ${t.name}? Tamu yang dialokasikan ke meja ini akan diubah menjadi belum memiliki meja.`)) {
+    return;
+  }
+
+  const tableIdClean = t.id.replace("T", "");
+  appGuests.forEach(g => {
+    if (g.table && (g.table === tableIdClean || g.table === t.id || g.table === t.name)) {
+      g.table = "";
+      g.seatZone = "";
+    }
+  });
+
+  appTables = appTables.filter(x => x.id !== tableId);
+  activeProject.tables = appTables;
+  persistState();
+  renderTableOccupancy();
+  renderGuestTable();
+  showToast("Meja Dihapus", `${t.name} berhasil dihapus.`, "info");
+}
+
+function openAssignGuestModal(tableId) {
+  const t = appTables.find(x => x.id === tableId);
+  if (!t) return;
+
+  document.getElementById("assignTargetTableId").value = t.id;
+  document.getElementById("assignGuestModalTitle").textContent = `Alokasikan Tamu ke ${t.name}`;
+  document.getElementById("assignTargetTableInfo").textContent = `Zona: ${t.zone} • Kapasitas: ${t.capacity} Kursi`;
+
+  const select = document.getElementById("assignGuestSelect");
+  if (!select) return;
+
+  // List all guests, prioritizing unassigned ones
+  const unassigned = appGuests.filter(g => !g.table);
+  const assignedOther = appGuests.filter(g => g.table && g.table !== t.id.replace("T", "0") && g.table !== t.id.replace("T", ""));
+
+  let optionsHtml = '';
+  if (unassigned.length > 0) {
+    optionsHtml += `<optgroup label="Tamu Belum Memiliki Meja (${unassigned.length})">`;
+    unassigned.forEach(g => {
+      optionsHtml += `<option value="${g.id}">${g.name} (${g.pax} pax) - [${g.category}]</option>`;
+    });
+    optionsHtml += `</optgroup>`;
+  }
+
+  if (assignedOther.length > 0) {
+    optionsHtml += `<optgroup label="Pindahkan dari Meja Lain (${assignedOther.length})">`;
+    assignedOther.forEach(g => {
+      optionsHtml += `<option value="${g.id}">${g.name} (${g.pax} pax) - Saat ini Meja ${g.table}</option>`;
+    });
+    optionsHtml += `</optgroup>`;
+  }
+
+  if (!optionsHtml) {
+    optionsHtml = `<option value="">Semua tamu sudah dialokasikan ke meja ini!</option>`;
+  }
+
+  select.innerHTML = optionsHtml;
+  document.getElementById("assignGuestModal").classList.add("active");
+}
+
+function closeAssignGuestModal() {
+  document.getElementById("assignGuestModal").classList.remove("active");
+}
+
+function confirmAssignGuest() {
+  const tableId = document.getElementById("assignTargetTableId").value;
+  const guestId = document.getElementById("assignGuestSelect").value;
+  const t = appTables.find(x => x.id === tableId);
+  const g = appGuests.find(x => x.id === guestId);
+
+  if (!t || !g) {
+    closeAssignGuestModal();
+    return;
+  }
+
+  const tableNum = t.id.replace("T", "");
+  g.table = tableNum.length === 1 ? `0${tableNum}` : tableNum;
+  g.seatZone = t.zone;
+
+  persistState();
+  closeAssignGuestModal();
+  renderTableOccupancy();
+  renderGuestTable();
+  showToast("Tamu Dialokasikan", `${g.name} berhasil ditempatkan di ${t.name}.`, "success");
+}
+
+function removeGuestFromTable(guestId) {
+  const g = appGuests.find(x => x.id === guestId);
+  if (!g) return;
+  const oldTable = g.table;
+  g.table = "";
+  g.seatZone = "";
+  persistState();
+  renderTableOccupancy();
+  renderGuestTable();
+  showToast("Alokasi Dibatalkan", `${g.name} dikeluarkan dari Meja ${oldTable}.`, "info");
 }
 
 // 6. Render Run-Sheet / Master Timeline
@@ -1097,11 +1348,13 @@ function renderTimeline() {
           ${item.time}
         </div>
         <div style="flex:1; background:#fff; border:1px solid var(--border-light); border-radius:14px; padding:16px 20px; box-shadow:var(--shadow-sm);">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; flex-wrap:wrap; gap:8px;">
             <h4 style="font-size:1rem; font-weight:700;">${item.title}</h4>
-            <div style="display:flex; gap:8px; align-items:center;">
+            <div style="display:flex; gap:6px; align-items:center;">
               ${statusBadge}
-              <button class="btn btn-outline btn-sm" onclick="toggleTimelineStatus('${item.id}')">Ubah Status</button>
+              <button class="btn btn-outline btn-sm" onclick="toggleTimelineStatus('${item.id}')" title="Ganti status acara">Status</button>
+              <button class="btn btn-outline btn-sm" onclick="openEditTimelineModal('${item.id}')" title="Ubah agenda">✏️</button>
+              <button class="btn btn-outline btn-sm" style="color:#DC2626; border-color:#FECACA;" onclick="deleteTimeline('${item.id}')" title="Hapus agenda">🗑️</button>
             </div>
           </div>
           <div style="font-size:0.8rem; color:var(--text-muted); display:flex; gap:16px; margin-bottom:6px;">
@@ -1109,12 +1362,98 @@ function renderTimeline() {
             <span>👤 PIC: <strong>${item.pic}</strong></span>
           </div>
           <div style="font-size:0.82rem; color:#475569; background:#F8FAFC; padding:8px 12px; border-radius:8px;">
-            ${item.notes}
+            ${item.notes || '-'}
           </div>
         </div>
       </div>
     `;
   }).join("");
+}
+
+function openAddTimelineModal() {
+  document.getElementById("timelineModalEditingId").value = "";
+  document.getElementById("timelineModalTitle").textContent = "Tambah Agenda Rundown Baru";
+  document.getElementById("timelineModalTime").value = "19:00";
+  document.getElementById("timelineModalTitleInput").value = "";
+  document.getElementById("timelineModalPic").value = "WO & MC";
+  document.getElementById("timelineModalLocation").value = "Main Ballroom";
+  document.getElementById("timelineModalStatus").value = "upcoming";
+  document.getElementById("timelineModalNotes").value = "";
+  document.getElementById("timelineModal").classList.add("active");
+}
+
+function openEditTimelineModal(id) {
+  const item = appTimeline.find(t => t.id === id);
+  if (!item) return;
+  document.getElementById("timelineModalEditingId").value = item.id;
+  document.getElementById("timelineModalTitle").textContent = `Ubah Agenda: ${item.title}`;
+  document.getElementById("timelineModalTime").value = item.time;
+  document.getElementById("timelineModalTitleInput").value = item.title;
+  document.getElementById("timelineModalPic").value = item.pic;
+  document.getElementById("timelineModalLocation").value = item.location;
+  document.getElementById("timelineModalStatus").value = item.status;
+  document.getElementById("timelineModalNotes").value = item.notes || "";
+  document.getElementById("timelineModal").classList.add("active");
+}
+
+function closeTimelineModal() {
+  document.getElementById("timelineModal").classList.remove("active");
+}
+
+function saveTimelineModal() {
+  const editingId = document.getElementById("timelineModalEditingId").value;
+  const time = document.getElementById("timelineModalTime").value.trim() || "00:00";
+  const title = document.getElementById("timelineModalTitleInput").value.trim();
+  const pic = document.getElementById("timelineModalPic").value.trim() || "WO";
+  const location = document.getElementById("timelineModalLocation").value.trim() || "Venue";
+  const status = document.getElementById("timelineModalStatus").value;
+  const notes = document.getElementById("timelineModalNotes").value.trim();
+
+  if (!title) {
+    alert("Judul agenda rundown wajib diisi!");
+    return;
+  }
+
+  if (editingId) {
+    const item = appTimeline.find(t => t.id === editingId);
+    if (item) {
+      item.time = time;
+      item.title = title;
+      item.pic = pic;
+      item.location = location;
+      item.status = status;
+      item.notes = notes;
+    }
+    showToast("Agenda Diperbarui", `${title} berhasil diupdate.`, "success");
+  } else {
+    appTimeline.push({
+      id: "tm_" + Date.now(),
+      time,
+      title,
+      pic,
+      location,
+      status,
+      notes
+    });
+    appTimeline.sort((a, b) => (a.time || "").localeCompare(b.time || ""));
+    showToast("Agenda Ditambahkan", `${title} berhasil dicatat di rundown.`, "success");
+  }
+
+  persistState();
+  closeTimelineModal();
+  renderTimeline();
+}
+
+function deleteTimeline(id) {
+  const item = appTimeline.find(t => t.id === id);
+  if (!item) return;
+  if (!confirm(`Hapus agenda "${item.title}" dari rundown?`)) return;
+
+  appTimeline = appTimeline.filter(t => t.id !== id);
+  activeProject.timeline = appTimeline;
+  persistState();
+  renderTimeline();
+  showToast("Agenda Dihapus", `Agenda telah dihapus dari rundown.`, "info");
 }
 
 function toggleTimelineStatus(id) {
@@ -1132,7 +1471,7 @@ function renderVendors() {
   if (!tbody) return;
 
   tbody.innerHTML = appVendors.map((v, i) => {
-    const cleanPhone = v.phone.replace(/[^0-9]/g, "");
+    const cleanPhone = (v.phone || "").replace(/[^0-9]/g, "");
     const waPhone = cleanPhone.startsWith("0") ? "62" + cleanPhone.slice(1) : cleanPhone;
     return `
       <tr>
@@ -1148,15 +1487,106 @@ function renderVendors() {
         <td>
           <span class="badge badge-status-in">${v.status}</span>
         </td>
-        <td style="font-size:0.8rem; color:var(--text-muted);">${v.notes}</td>
+        <td style="font-size:0.8rem; color:var(--text-muted);">${v.notes || '-'}</td>
         <td>
           <a href="https://wa.me/${waPhone}?text=Halo%20${encodeURIComponent(v.picName)},%20update%20acara%20pernikahan%20${encodeURIComponent(activeProject.couple)}" target="_blank" class="btn btn-primary btn-sm" style="background:#16A34A; text-decoration:none;">
-            💬 WhatsApp
+            💬 WA
           </a>
+        </td>
+        <td style="text-align:right;">
+          <div style="display:flex; gap:6px; justify-content:flex-end;">
+            <button class="btn btn-outline btn-sm" onclick="openEditVendorModal('${v.id}')" title="Ubah data vendor">✏️</button>
+            <button class="btn btn-outline btn-sm" style="color:#DC2626; border-color:#FECACA;" onclick="deleteVendor('${v.id}')" title="Hapus vendor">🗑️</button>
+          </div>
         </td>
       </tr>
     `;
   }).join("");
+}
+
+function openAddVendorModal() {
+  document.getElementById("vendorModalEditingId").value = "";
+  document.getElementById("vendorModalTitle").textContent = "Tambah Kontak Vendor Baru";
+  document.getElementById("vendorModalCategory").value = "";
+  document.getElementById("vendorModalName").value = "";
+  document.getElementById("vendorModalPic").value = "";
+  document.getElementById("vendorModalPhone").value = "";
+  document.getElementById("vendorModalStatus").value = "Confirmed";
+  document.getElementById("vendorModalNotes").value = "";
+  document.getElementById("vendorModal").classList.add("active");
+}
+
+function openEditVendorModal(id) {
+  const v = appVendors.find(x => x.id === id);
+  if (!v) return;
+  document.getElementById("vendorModalEditingId").value = v.id;
+  document.getElementById("vendorModalTitle").textContent = `Ubah Vendor: ${v.vendorName}`;
+  document.getElementById("vendorModalCategory").value = v.category;
+  document.getElementById("vendorModalName").value = v.vendorName;
+  document.getElementById("vendorModalPic").value = v.picName;
+  document.getElementById("vendorModalPhone").value = v.phone;
+  document.getElementById("vendorModalStatus").value = v.status;
+  document.getElementById("vendorModalNotes").value = v.notes || "";
+  document.getElementById("vendorModal").classList.add("active");
+}
+
+function closeVendorModal() {
+  document.getElementById("vendorModal").classList.remove("active");
+}
+
+function saveVendorModal() {
+  const editingId = document.getElementById("vendorModalEditingId").value;
+  const category = document.getElementById("vendorModalCategory").value.trim() || "Vendor";
+  const vendorName = document.getElementById("vendorModalName").value.trim();
+  const picName = document.getElementById("vendorModalPic").value.trim() || "-";
+  const phone = document.getElementById("vendorModalPhone").value.trim();
+  const status = document.getElementById("vendorModalStatus").value;
+  const notes = document.getElementById("vendorModalNotes").value.trim();
+
+  if (!vendorName || !phone) {
+    alert("Nama vendor dan nomor telepon/WhatsApp wajib diisi!");
+    return;
+  }
+
+  if (editingId) {
+    const v = appVendors.find(x => x.id === editingId);
+    if (v) {
+      v.category = category;
+      v.vendorName = vendorName;
+      v.picName = picName;
+      v.phone = phone;
+      v.status = status;
+      v.notes = notes;
+    }
+    showToast("Vendor Diperbarui", `${vendorName} berhasil diperbarui.`, "success");
+  } else {
+    appVendors.push({
+      id: "v_" + Date.now(),
+      category,
+      vendorName,
+      picName,
+      phone,
+      status,
+      notes
+    });
+    showToast("Vendor Ditambahkan", `${vendorName} berhasil disimpan.`, "success");
+  }
+
+  persistState();
+  closeVendorModal();
+  renderVendors();
+}
+
+function deleteVendor(id) {
+  const v = appVendors.find(x => x.id === id);
+  if (!v) return;
+  if (!confirm(`Hapus vendor "${v.vendorName}" dari direktori?`)) return;
+
+  appVendors = appVendors.filter(x => x.id !== id);
+  activeProject.vendors = appVendors;
+  persistState();
+  renderVendors();
+  showToast("Vendor Dihapus", `${v.vendorName} dihapus.`, "info");
 }
 
 // 8. Render Reception Checklist
@@ -1177,9 +1607,95 @@ function renderChecklist() {
             ${c.status === 'ready' ? '✓ Siap di Venue' : '○ Belum Siap'}
           </button>
         </td>
+        <td style="text-align:right;">
+          <div style="display:flex; gap:6px; justify-content:flex-end;">
+            <button class="btn btn-outline btn-sm" onclick="openEditChecklistModal('${c.id}')" title="Ubah checklist">✏️</button>
+            <button class="btn btn-outline btn-sm" style="color:#DC2626; border-color:#FECACA;" onclick="deleteChecklist('${c.id}')" title="Hapus checklist">🗑️</button>
+          </div>
+        </td>
       </tr>
     `;
   }).join("");
+}
+
+function openAddChecklistModal() {
+  document.getElementById("checklistModalEditingId").value = "";
+  document.getElementById("checklistModalTitle").textContent = "Tambah Item Checklist Baru";
+  document.getElementById("checklistModalZone").value = "Meja Resepsi";
+  document.getElementById("checklistModalItem").value = "";
+  document.getElementById("checklistModalQty").value = "1 Unit";
+  document.getElementById("checklistModalPic").value = "Kru Resepsi";
+  document.getElementById("checklistModalStatus").value = "ready";
+  document.getElementById("checklistModal").classList.add("active");
+}
+
+function openEditChecklistModal(id) {
+  const c = appChecklist.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById("checklistModalEditingId").value = c.id;
+  document.getElementById("checklistModalTitle").textContent = `Ubah Item: ${c.item}`;
+  document.getElementById("checklistModalZone").value = c.zone;
+  document.getElementById("checklistModalItem").value = c.item;
+  document.getElementById("checklistModalQty").value = c.qty;
+  document.getElementById("checklistModalPic").value = c.pic;
+  document.getElementById("checklistModalStatus").value = c.status;
+  document.getElementById("checklistModal").classList.add("active");
+}
+
+function closeChecklistModal() {
+  document.getElementById("checklistModal").classList.remove("active");
+}
+
+function saveChecklistModal() {
+  const editingId = document.getElementById("checklistModalEditingId").value;
+  const zone = document.getElementById("checklistModalZone").value.trim() || "Venue";
+  const item = document.getElementById("checklistModalItem").value.trim();
+  const qty = document.getElementById("checklistModalQty").value.trim() || "1";
+  const pic = document.getElementById("checklistModalPic").value.trim() || "Kru";
+  const status = document.getElementById("checklistModalStatus").value;
+
+  if (!item) {
+    alert("Nama item perlengkapan wajib diisi!");
+    return;
+  }
+
+  if (editingId) {
+    const c = appChecklist.find(x => x.id === editingId);
+    if (c) {
+      c.zone = zone;
+      c.item = item;
+      c.qty = qty;
+      c.pic = pic;
+      c.status = status;
+    }
+    showToast("Checklist Diperbarui", `${item} berhasil diupdate.`, "success");
+  } else {
+    appChecklist.push({
+      id: "c_" + Date.now(),
+      zone,
+      item,
+      qty,
+      pic,
+      status
+    });
+    showToast("Checklist Ditambahkan", `${item} berhasil dicatat.`, "success");
+  }
+
+  persistState();
+  closeChecklistModal();
+  renderChecklist();
+}
+
+function deleteChecklist(id) {
+  const c = appChecklist.find(x => x.id === id);
+  if (!c) return;
+  if (!confirm(`Hapus item "${c.item}" dari checklist?`)) return;
+
+  appChecklist = appChecklist.filter(x => x.id !== id);
+  activeProject.checklist = appChecklist;
+  persistState();
+  renderChecklist();
+  showToast("Checklist Dihapus", `Item berhasil dihapus.`, "info");
 }
 
 function toggleChecklistStatus(id) {

@@ -32,7 +32,7 @@
       <li class="nav-item" data-tab="projects" style="margin-bottom: 8px;">
         <button class="nav-btn" data-tab="projects" style="font-weight:600;">
           <span class="nav-icon">📁</span>
-          <span>Daftar Proyek Acara</span>
+          <span>Project</span>
         </button>
       </li>
 
@@ -46,7 +46,7 @@
       <li class="nav-item" data-tab="scanner">
         <button class="nav-btn" data-tab="scanner">
           <span class="nav-icon">⚲</span>
-          <span>Front Desk (Scan)</span>
+          <span>Front Desk</span>
           <span class="nav-badge" id="navCheckInBadge">Live</span>
         </button>
       </li>
@@ -56,7 +56,7 @@
           <span>Daftar Tamu</span>
         </button>
       </li>
-      <li class="nav-item" data-tab="seating">
+      <li class="nav-item nav-reception-only" data-tab="seating">
         <button class="nav-btn" data-tab="seating">
           <span class="nav-icon">🪑</span>
           <span>Meja & Kursi</span>
@@ -77,6 +77,12 @@
 
       <!-- Planner Studio Only Items -->
       <li class="nav-planner-only"><span class="section-tag" style="margin-top:10px;">Planner Studio (WO)</span></li>
+      <li class="nav-item nav-planner-only" data-tab="seating">
+        <button class="nav-btn" data-tab="seating">
+          <span class="nav-icon">🪑</span>
+          <span>Setup Meja & Kursi</span>
+        </button>
+      </li>
       <li class="nav-item nav-planner-only" data-tab="timeline">
         <button class="nav-btn" data-tab="timeline">
           <span class="nav-icon">⏱️</span>
@@ -152,13 +158,13 @@
       <section class="tab-panel" id="tab-projects">
         <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 24px; flex-wrap:wrap; gap:16px;">
           <div>
-            <h2 style="font-size:1.35rem; font-weight:800; color:var(--text-dark);">📁 Daftar Proyek Pernikahan (Multi-Event)</h2>
+            <h2 style="font-size:1.35rem; font-weight:800; color:var(--text-dark);">📁 Project (Multi-Event Hub)</h2>
             <p style="font-size:0.85rem; color:var(--text-muted); margin-top:4px;">
-              Pilih acara yang ingin dikelola atau buat proyek pernikahan baru untuk pasangan berikutnya.
+              Pilih project acara pernikahan yang ingin dikelola atau buat project baru.
             </p>
           </div>
           <button class="btn btn-primary" onclick="openCreateProjectModal()">
-            + Buat Acara Baru
+            + Buat Project Baru
           </button>
         </div>
 
@@ -402,10 +408,43 @@
 
       <!-- ================= 4. TAB: SEATING ================= -->
       <section class="tab-panel" id="tab-seating">
-        <div style="margin-bottom: 24px;">
-          <h2 style="font-size:1.3rem; font-weight:700;">Status Meja & Kapasitas Kursi</h2>
-          <p style="font-size:0.82rem; color:var(--text-muted);">Monitoring kursi terisi secara realtime saat tamu tiba di venue.</p>
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 20px; flex-wrap:wrap; gap:16px;">
+          <div>
+            <h2 style="font-size:1.3rem; font-weight:700;" id="seatingTabTitle">Status Meja & Kapasitas Kursi</h2>
+            <p style="font-size:0.82rem; color:var(--text-muted);" id="seatingTabSubtitle">Monitoring kursi terisi secara realtime saat tamu tiba di venue.</p>
+          </div>
+          <!-- Planner Setup Action Group (Visible only in Planner mode) -->
+          <div id="plannerSeatingActions" style="display:none; gap:10px;">
+            <button class="btn btn-primary" onclick="openAddTableModal()">
+              + Tambah Meja Baru
+            </button>
+          </div>
         </div>
+
+        <!-- Planner Seating Metrics Overview (Visible only in Planner mode) -->
+        <div id="plannerSeatingStats" style="display:none; grid-template-columns: repeat(4, 1fr); gap:14px; margin-bottom:20px;">
+          <div class="stat-cell" style="padding:14px 18px;">
+            <div class="stat-cell-title">Total Meja</div>
+            <div class="stat-cell-number" id="statsTotalTables" style="font-size:1.4rem;">0</div>
+            <div class="stat-cell-sub">Unit meja venue</div>
+          </div>
+          <div class="stat-cell" style="padding:14px 18px;">
+            <div class="stat-cell-title">Total Kursi</div>
+            <div class="stat-cell-number" id="statsTotalSeats" style="font-size:1.4rem;">0</div>
+            <div class="stat-cell-sub">Kapasitas ballroom</div>
+          </div>
+          <div class="stat-cell" style="padding:14px 18px;">
+            <div class="stat-cell-title">Kursi Teralokasi</div>
+            <div class="stat-cell-number" id="statsAllocatedSeats" style="font-size:1.4rem;">0</div>
+            <div class="stat-cell-sub" id="statsAllocatedPct">0% Terisi</div>
+          </div>
+          <div class="stat-cell" style="padding:14px 18px;">
+            <div class="stat-cell-title">Kursi Kosong/Sedia</div>
+            <div class="stat-cell-number" id="statsAvailableSeats" style="font-size:1.4rem; color:#16A34A;">0</div>
+            <div class="stat-cell-sub">Tersedia dialokasikan</div>
+          </div>
+        </div>
+
         <div id="tableCardsGrid" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:18px;"></div>
       </section>
 
@@ -531,11 +570,14 @@
 
       <!-- ================= 7. TAB: RUN-SHEET TIMELINE (PLANNER ONLY) ================= -->
       <section class="tab-panel" id="tab-timeline">
-        <div style="margin-bottom: 24px; display:flex; justify-content:space-between; align-items:center;">
+        <div style="margin-bottom: 24px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;">
           <div>
             <h2 style="font-size:1.3rem; font-weight:700;">Run-Sheet / Master Rundown Hari H</h2>
-            <p style="font-size:0.82rem; color:var(--text-muted);">Jadwal terstruktur acara dari persiapan, registrasi, kirab, hingga pengundian doorprize.</p>
+            <p style="font-size:0.82rem; color:var(--text-muted);">Jadwal terstruktur acara dari persiapan, registrasi, kirab, hingga penutupan.</p>
           </div>
+          <button class="btn btn-primary" onclick="openAddTimelineModal()">
+            + Tambah Agenda Rundown
+          </button>
         </div>
         <div id="timelineListContainer" style="max-width:850px;"></div>
       </section>
@@ -548,17 +590,23 @@
               <h3>Direktori Kontak Vendor Darurat Hari H</h3>
               <p>Daftar penanggung jawab teknis di venue dengan tautan cepat WhatsApp.</p>
             </div>
+            <div class="table-actions-group">
+              <button class="btn btn-primary" onclick="openAddVendorModal()">
+                + Tambah Kontak Vendor
+              </button>
+            </div>
           </div>
           <table class="custom-table">
             <thead>
               <tr>
-                <th>No</th>
+                <th style="width:50px;">No</th>
                 <th>Kategori & Vendor</th>
                 <th>Nama PIC</th>
                 <th>Nomor WhatsApp</th>
                 <th>Status di Venue</th>
                 <th>Catatan Teknis</th>
                 <th>Hubungi</th>
+                <th style="width:110px; text-align:right;">Aksi</th>
               </tr>
             </thead>
             <tbody id="vendorTableBody"></tbody>
@@ -574,16 +622,22 @@
               <h3>Checklist Meja Resepsi & Produksi</h3>
               <p>Daftar perlengkapan registrasi, printer thermal, kertas roll, dan souvenir sebelum pintu dibuka.</p>
             </div>
+            <div class="table-actions-group">
+              <button class="btn btn-primary" onclick="openAddChecklistModal()">
+                + Tambah Item Checklist
+              </button>
+            </div>
           </div>
           <table class="custom-table">
             <thead>
               <tr>
-                <th>No</th>
+                <th style="width:50px;">No</th>
                 <th>Zona / Area</th>
                 <th>Item Perlengkapan</th>
                 <th>Jumlah</th>
                 <th>Penanggung Jawab</th>
                 <th>Status Kesiapan</th>
+                <th style="width:110px; text-align:right;">Aksi</th>
               </tr>
             </thead>
             <tbody id="checklistTableBody"></tbody>
@@ -836,6 +890,208 @@
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeCreateProjectModal()">Batal</button>
       <button class="btn btn-primary" onclick="createNewProject()">Simpan & Buat Acara</button>
+    </div>
+  </div>
+</div>
+
+<!-- 8. Table Modal (Add / Edit Meja Kursi) -->
+<div class="modal-overlay" id="tableModal">
+  <div class="modal-window">
+    <div class="modal-header">
+      <h3 id="tableModalTitle">Tambah Meja Baru</h3>
+      <button class="modal-close" onclick="closeTableModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="tableModalEditingId">
+      <div class="form-group">
+        <label>Nama Meja *</label>
+        <input type="text" class="form-control" id="tableModalName" placeholder="Contoh: Meja 07 (VIP Rekan Bisnis)">
+      </div>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+        <div class="form-group">
+          <label>Kapasitas Kursi (Pax) *</label>
+          <input type="number" class="form-control" id="tableModalCapacity" value="10" min="1" max="50">
+        </div>
+        <div class="form-group">
+          <label>Zonasi / Area Venue</label>
+          <input type="text" class="form-control" id="tableModalZone" placeholder="Contoh: Depan Panggung Kanan">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeTableModal()">Batal</button>
+      <button class="btn btn-primary" onclick="saveTableModal()">Simpan Meja</button>
+    </div>
+  </div>
+</div>
+
+<!-- 9. Assign Guest to Table Modal -->
+<div class="modal-overlay" id="assignGuestModal">
+  <div class="modal-window">
+    <div class="modal-header">
+      <h3 id="assignGuestModalTitle">Alokasikan Tamu ke Meja</h3>
+      <button class="modal-close" onclick="closeAssignGuestModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="assignTargetTableId">
+      <p id="assignTargetTableInfo" style="font-size:0.85rem; color:var(--text-muted); margin-bottom:14px;"></p>
+      
+      <div class="form-group">
+        <label>Pilih Tamu Undangan</label>
+        <select class="form-control" id="assignGuestSelect" style="margin-bottom:12px;">
+          <!-- Populated dynamically -->
+        </select>
+      </div>
+      <div style="font-size:0.75rem; color:#64748B;">
+        💡 Tip: Tamu yang dialokasikan akan otomatis memiliki nomor meja dan zona sesuai meja ini.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeAssignGuestModal()">Batal</button>
+      <button class="btn btn-primary" onclick="confirmAssignGuest()">Tetapkan ke Meja</button>
+    </div>
+  </div>
+</div>
+
+<!-- 10. Timeline Modal (Add / Edit Rundown) -->
+<div class="modal-overlay" id="timelineModal">
+  <div class="modal-window">
+    <div class="modal-header">
+      <h3 id="timelineModalTitle">Tambah Agenda Rundown</h3>
+      <button class="modal-close" onclick="closeTimelineModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="timelineModalEditingId">
+      <div style="display:grid; grid-template-columns: 120px 1fr; gap:12px;">
+        <div class="form-group">
+          <label>Waktu (Jam) *</label>
+          <input type="text" class="form-control" id="timelineModalTime" placeholder="18:30">
+        </div>
+        <div class="form-group">
+          <label>Judul Agenda *</label>
+          <input type="text" class="form-control" id="timelineModalTitleInput" placeholder="Contoh: Kirab Pengantin & Sambutan Keluarga">
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+        <div class="form-group">
+          <label>Penanggung Jawab (PIC)</label>
+          <input type="text" class="form-control" id="timelineModalPic" placeholder="Contoh: WO & MC">
+        </div>
+        <div class="form-group">
+          <label>Lokasi / Area</label>
+          <input type="text" class="form-control" id="timelineModalLocation" placeholder="Contoh: Main Ballroom">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select class="form-control" id="timelineModalStatus">
+          <option value="upcoming">○ Mendatang</option>
+          <option value="current">● Berlangsung</option>
+          <option value="done">✓ Selesai</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Catatan Teknis / Cue Music & Lighting</label>
+        <textarea class="form-control" id="timelineModalNotes" rows="2" placeholder="Catatan instruksi untuk tim sound, lighting, dan pengiring..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeTimelineModal()">Batal</button>
+      <button class="btn btn-primary" onclick="saveTimelineModal()">Simpan Agenda</button>
+    </div>
+  </div>
+</div>
+
+<!-- 11. Vendor Modal (Add / Edit Vendor) -->
+<div class="modal-overlay" id="vendorModal">
+  <div class="modal-window">
+    <div class="modal-header">
+      <h3 id="vendorModalTitle">Tambah Kontak Vendor</h3>
+      <button class="modal-close" onclick="closeVendorModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="vendorModalEditingId">
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+        <div class="form-group">
+          <label>Kategori Vendor *</label>
+          <input type="text" class="form-control" id="vendorModalCategory" placeholder="Contoh: Catering / Dekorasi / Sound">
+        </div>
+        <div class="form-group">
+          <label>Nama Vendor / Brand *</label>
+          <input type="text" class="form-control" id="vendorModalName" placeholder="Contoh: Royal Palace Catering">
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+        <div class="form-group">
+          <label>Nama PIC</label>
+          <input type="text" class="form-control" id="vendorModalPic" placeholder="Contoh: Mas Danang">
+        </div>
+        <div class="form-group">
+          <label>Nomor WhatsApp / Telp *</label>
+          <input type="text" class="form-control" id="vendorModalPhone" placeholder="Contoh: 081234567890">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Status di Venue</label>
+        <select class="form-control" id="vendorModalStatus">
+          <option value="Confirmed">Confirmed</option>
+          <option value="Standby di Venue">Standby di Venue</option>
+          <option value="Loading Alat">Loading Alat</option>
+          <option value="Selesai Bertugas">Selesai Bertugas</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Catatan Teknis / Penempatan</label>
+        <input type="text" class="form-control" id="vendorModalNotes" placeholder="Contoh: Standby di sayap panggung jam 15:00">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeVendorModal()">Batal</button>
+      <button class="btn btn-primary" onclick="saveVendorModal()">Simpan Vendor</button>
+    </div>
+  </div>
+</div>
+
+<!-- 12. Checklist Modal (Add / Edit Checklist) -->
+<div class="modal-overlay" id="checklistModal">
+  <div class="modal-window">
+    <div class="modal-header">
+      <h3 id="checklistModalTitle">Tambah Item Checklist</h3>
+      <button class="modal-close" onclick="closeChecklistModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="checklistModalEditingId">
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+        <div class="form-group">
+          <label>Zona / Area *</label>
+          <input type="text" class="form-control" id="checklistModalZone" placeholder="Contoh: Meja Resepsi / Panggung">
+        </div>
+        <div class="form-group">
+          <label>Item Perlengkapan *</label>
+          <input type="text" class="form-control" id="checklistModalItem" placeholder="Contoh: Roll Kertas Thermal 58mm">
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+        <div class="form-group">
+          <label>Jumlah / Qty</label>
+          <input type="text" class="form-control" id="checklistModalQty" placeholder="Contoh: 5 Roll / 2 Unit">
+        </div>
+        <div class="form-group">
+          <label>Penanggung Jawab (PIC)</label>
+          <input type="text" class="form-control" id="checklistModalPic" placeholder="Contoh: Kru Meja Registrasi">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Status Kesiapan</label>
+        <select class="form-control" id="checklistModalStatus">
+          <option value="ready">✓ Siap di Venue</option>
+          <option value="pending">○ Belum Siap</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeChecklistModal()">Batal</button>
+      <button class="btn btn-primary" onclick="saveChecklistModal()">Simpan Item</button>
     </div>
   </div>
 </div>

@@ -245,13 +245,18 @@ function applyWorkspaceModeUI() {
   const modeBtn = document.getElementById("modeSwitchBtn");
   const plannerNavItems = document.querySelectorAll(".nav-planner-only");
   const remotePill = document.getElementById("remotePill");
+  const segReception = document.getElementById("segModeReception");
+  const segPlanner = document.getElementById("segModePlanner");
 
   if (currentMode === "reception") {
     if (modeBtn) {
       modeBtn.innerHTML = "🎯 Mode: <strong>Resepsionis (Hari-H)</strong>";
       modeBtn.className = "mode-switch-pill reception";
     }
-    if (remotePill) remotePill.style.display = "flex";
+    if (segReception) segReception.classList.add("active");
+    if (segPlanner) segPlanner.classList.remove("active");
+
+    if (remotePill) remotePill.style.display = "inline-flex";
     plannerNavItems.forEach(el => el.style.display = "none");
     if (["timeline", "vendors", "checklist"].includes(activeTab)) {
       switchTab("dashboard");
@@ -261,6 +266,9 @@ function applyWorkspaceModeUI() {
       modeBtn.innerHTML = "📋 Mode: <strong>Planner Studio (WO)</strong>";
       modeBtn.className = "mode-switch-pill planner";
     }
+    if (segReception) segReception.classList.remove("active");
+    if (segPlanner) segPlanner.classList.add("active");
+
     // Remote is restricted to Reception mode only!
     if (remotePill) remotePill.style.display = "none";
     closeRemoteModal();
@@ -270,6 +278,25 @@ function applyWorkspaceModeUI() {
   // Notify any connected remote devices about mode status
   if (window.SapaRemote && SapaRemote.isHost) {
     SapaRemote.broadcastHostState();
+  }
+}
+
+// Sidebar Toggle & Collapse Handlers
+function toggleSidebar() {
+  const isMobile = window.innerWidth <= 768;
+  if (isMobile) {
+    document.body.classList.toggle("sidebar-open-mobile");
+  } else {
+    document.body.classList.toggle("sidebar-collapsed");
+    localStorage.setItem("vow_sidebar_collapsed", document.body.classList.contains("sidebar-collapsed") ? "true" : "false");
+  }
+}
+
+function initSidebarState() {
+  if (window.innerWidth > 768) {
+    if (localStorage.getItem("vow_sidebar_collapsed") === "true") {
+      document.body.classList.add("sidebar-collapsed");
+    }
   }
 }
 
@@ -293,6 +320,7 @@ function closeRemoteModal() {
 
 // Initialize Application
 document.addEventListener("DOMContentLoaded", () => {
+  initSidebarState();
   setupNavigation();
   setupBarcodeGunListener();
   setupPrinterEvents();
@@ -309,6 +337,10 @@ function setupNavigation() {
     btn.addEventListener("click", () => {
       const target = btn.dataset.tab;
       switchTab(target);
+      // Auto close sidebar on mobile after navigating
+      if (window.innerWidth <= 768) {
+        document.body.classList.remove("sidebar-open-mobile");
+      }
     });
   });
 }
@@ -598,28 +630,36 @@ function renderKPIs() {
 
   const elCheckIn = document.getElementById("kpiCheckedIn");
   const elCheckInSub = document.getElementById("kpiCheckedInSub");
+  const pctHadir = Math.round((checkedIn / (total || 1)) * 100);
   if (elCheckIn) elCheckIn.textContent = checkedIn;
-  if (elCheckInSub) elCheckInSub.textContent = `${Math.round((checkedIn / (total || 1)) * 100)}% dari target pax`;
+  if (elCheckInSub) elCheckInSub.textContent = `${pctHadir}% Hadir`;
 
   const elAwaiting = document.getElementById("kpiAwaiting");
   const elAwaitingSub = document.getElementById("kpiAwaitingSub");
   if (elAwaiting) elAwaiting.textContent = awaiting;
-  if (elAwaitingSub) elAwaitingSub.textContent = `${appGuests.filter(g => !g.isCheckedIn).length} undangan`;
+  if (elAwaitingSub) elAwaitingSub.textContent = `${appGuests.filter(g => !g.isCheckedIn).length} Undangan`;
 
   const elTotal = document.getElementById("kpiTotalGuests");
   const elTotalSub = document.getElementById("kpiTotalGuestsSub");
   if (elTotal) elTotal.textContent = total;
-  if (elTotalSub) elTotalSub.textContent = `${appGuests.length} kontak undangan`;
+  if (elTotalSub) elTotalSub.textContent = `${appGuests.length} Undangan Aktif`;
+
+  const elOcc = document.getElementById("kpiOccupancyPercent");
+  if (elOcc) {
+    const totalCapacity = appTables.reduce((acc, t) => acc + t.capacity, 0);
+    const occPct = Math.round((checkedIn / (totalCapacity || 1)) * 100);
+    elOcc.textContent = `${occPct}%`;
+  }
 
   const elSouvenir = document.getElementById("kpiSouvenir");
   const elSouvenirSub = document.getElementById("kpiSouvenirSub");
   if (elSouvenir) elSouvenir.textContent = souvenirClaimed;
-  if (elSouvenirSub) elSouvenirSub.textContent = `Stok: ${appEvent.souvenirTotal} pcs`;
+  if (elSouvenirSub) elSouvenirSub.textContent = `Stok: ${appEvent.souvenirTotal} Pcs`;
 
   const elDoorprize = document.getElementById("kpiDoorprize");
   const elDoorprizeSub = document.getElementById("kpiDoorprizeSub");
   if (elDoorprize) elDoorprize.textContent = doorprizePool;
-  if (elDoorprizeSub) elDoorprizeSub.textContent = "Kupon terdaftar hadir";
+  if (elDoorprizeSub) elDoorprizeSub.textContent = "Kupon Terdaftar Hadir";
 }
 
 // 2. Render Check-in Arrival Chart

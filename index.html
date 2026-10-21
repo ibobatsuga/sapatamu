@@ -14,6 +14,9 @@
 <body>
 
 <div class="app-container">
+  <!-- Mobile Backdrop for Sidebar -->
+  <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleSidebar()"></div>
+
   <!-- ================= SIDEBAR ================= -->
   <aside class="sidebar">
     <div class="brand">
@@ -102,44 +105,48 @@
 
   <!-- ================= MAIN WRAPPER ================= -->
   <div class="main-wrapper">
-    <!-- Topbar -->
+    <!-- Topbar (Minimalist, Elevated, Clutter-Free) -->
     <header class="topbar">
-      <div class="page-heading">
-        <h1 id="topbarTitle">Wedding Reception Dashboard</h1>
+      <!-- Left: Hamburger & Event Branding -->
+      <div class="topbar-left">
+        <button class="burger-btn" id="sidebarToggleBtn" onclick="toggleSidebar()" aria-label="Toggle Sidebar" title="Sembunyikan/Buka Menu (Sidebar)">
+          <span class="burger-line"></span>
+          <span class="burger-line"></span>
+          <span class="burger-line"></span>
+        </button>
+        <div class="topbar-event-meta">
+          <span class="topbar-event-title" id="topbarTitle">Wedding Reception</span>
+          <span class="topbar-event-sub" id="topbarSubtitle">Kevin & Nadya • 24 Okt 2026</span>
+        </div>
       </div>
 
-      <div class="topbar-right">
-        <!-- Dual Workspace Mode Switcher -->
-        <button class="mode-switch-pill reception" id="modeSwitchBtn" onclick="switchWorkspaceMode(currentMode === 'reception' ? 'planner' : 'reception')">
-          🎯 Mode: <strong>Resepsionis (Hari-H)</strong>
-        </button>
-
-        <!-- Quick Search -->
+      <!-- Center: Refined Search Bar -->
+      <div class="topbar-center">
         <div class="search-box">
           <span class="search-icon">🔍</span>
-          <input type="text" id="globalSearchInput" placeholder="Cari nama, meja, kode..." oninput="renderGuestTable()">
+          <input type="text" id="globalSearchInput" placeholder="Cari nama tamu, nomor meja, atau kode..." oninput="renderGuestTable()">
+        </div>
+      </div>
+
+      <!-- Right: Mode Control & Hardware Status -->
+      <div class="topbar-right">
+        <!-- Segmented Mode Control -->
+        <div class="segmented-mode-control">
+          <button class="seg-btn active" id="segModeReception" onclick="switchWorkspaceMode('reception')">Resepsionis</button>
+          <button class="seg-btn" id="segModePlanner" onclick="switchWorkspaceMode('planner')">Planner Studio</button>
         </div>
 
-        <!-- Smartphone Remote Control Pill -->
-        <div class="printer-pill disconnected" id="remotePill" onclick="openRemoteModal()" title="Koneksikan smartphone sebagai remote scanner via QR">
+        <!-- Smartphone Remote Button (Only in Reception Mode) -->
+        <button class="device-btn" id="remotePill" onclick="openRemoteModal()" title="Koneksi Remote Smartphone via QR">
           <span>📱</span>
           <span id="remotePillLabel">Remote HP</span>
-        </div>
+        </button>
 
-        <!-- Bluetooth Thermal Printer Status -->
-        <div class="printer-pill disconnected" id="printerStatusPill" onclick="togglePrinterConnect()" title="Klik untuk pairing Bluetooth printer">
-          <span class="printer-dot"></span>
-          <span id="printerDeviceLabel">BT Disconnected</span>
-        </div>
-
-        <!-- User Profile -->
-        <div class="user-profile">
-          <div class="user-avatar">ST</div>
-          <div class="user-info">
-            <span class="user-name">SapaTamu Desk</span>
-            <span class="user-role">Frontline Admin</span>
-          </div>
-        </div>
+        <!-- Bluetooth Thermal Printer Button -->
+        <button class="device-btn" id="printerStatusPill" onclick="togglePrinterConnect()" title="Status Bluetooth Thermal 58mm (Klik untuk Hubungkan)">
+          <span class="device-dot"></span>
+          <span id="printerDeviceLabel">Thermal 58mm</span>
+        </button>
       </div>
     </header>
 
@@ -148,71 +155,71 @@
 
       <!-- ================= 1. TAB: DASHBOARD ================= -->
       <section class="tab-panel active" id="tab-dashboard">
-        <!-- KPI Row (Homel-inspired Pastel Cards) -->
-        <div class="kpi-grid">
-          <!-- Card 1: Blue -->
-          <div class="kpi-card blue">
-            <div class="kpi-top">
-              <div class="kpi-icon-wrap">📥</div>
-              <button class="kpi-more" onclick="switchTab('guests')">⋮</button>
+        <!-- Executive Stats Strip (Quiet Luxury, Anti-Slop) -->
+        <div class="stats-strip">
+          <!-- Stat 1: Kehadiran -->
+          <div class="stat-cell">
+            <div class="stat-cell-header">
+              <span class="stat-cell-title">Kehadiran Tamu</span>
+              <span class="stat-cell-badge highlight" id="kpiCheckedInSub">0% Hadir</span>
             </div>
-            <div class="kpi-body">
-              <div class="kpi-label">Today's Check-in</div>
-              <div class="kpi-value" id="kpiCheckedIn">0</div>
-              <div class="kpi-footer" id="kpiCheckedInSub">0% dari target pax</div>
+            <div class="stat-cell-value-wrap">
+              <span class="stat-cell-number" id="kpiCheckedIn">0</span>
+              <span class="stat-cell-unit">/ <span id="kpiTotalGuests">0</span> Pax</span>
             </div>
+            <div class="stat-cell-sub" id="kpiTotalGuestsSub">Daftar undangan aktif</div>
           </div>
 
-          <!-- Card 2: Green -->
-          <div class="kpi-card green">
-            <div class="kpi-top">
-              <div class="kpi-icon-wrap">⏳</div>
-              <button class="kpi-more" onclick="switchTab('guests')">⋮</button>
+          <!-- Stat 2: Belum Hadir -->
+          <div class="stat-cell">
+            <div class="stat-cell-header">
+              <span class="stat-cell-title">Belum Hadir</span>
+              <span class="stat-cell-badge">Menunggu</span>
             </div>
-            <div class="kpi-body">
-              <div class="kpi-label">Belum Hadir</div>
-              <div class="kpi-value" id="kpiAwaiting">0</div>
-              <div class="kpi-footer" id="kpiAwaitingSub">Menunggu kehadiran</div>
+            <div class="stat-cell-value-wrap">
+              <span class="stat-cell-number" id="kpiAwaiting">0</span>
+              <span class="stat-cell-unit">Pax</span>
             </div>
+            <div class="stat-cell-sub" id="kpiAwaitingSub">Menunggu di venue</div>
           </div>
 
-          <!-- Card 3: Pink -->
-          <div class="kpi-card pink">
-            <div class="kpi-top">
-              <div class="kpi-icon-wrap">💌</div>
-              <button class="kpi-more" onclick="switchTab('guests')">⋮</button>
+          <!-- Stat 3: Kapasitas Meja -->
+          <div class="stat-cell">
+            <div class="stat-cell-header">
+              <span class="stat-cell-title">Kapasitas Kursi</span>
+              <span class="stat-cell-badge" id="kpiOccupancyBadge">Ballroom</span>
             </div>
-            <div class="kpi-body">
-              <div class="kpi-label">Total Tamu (Pax)</div>
-              <div class="kpi-value" id="kpiTotalGuests">0</div>
-              <div class="kpi-footer" id="kpiTotalGuestsSub">Terdaftar di sistem</div>
+            <div class="stat-cell-value-wrap">
+              <span class="stat-cell-number" id="kpiOccupancyPercent">0%</span>
+              <span class="stat-cell-unit">Terisi</span>
             </div>
+            <div class="stat-cell-sub">Kapasitas 6 Meja Utama</div>
           </div>
 
-          <!-- Card 4: Yellow -->
-          <div class="kpi-card yellow">
-            <div class="kpi-top">
-              <div class="kpi-icon-wrap">🎁</div>
-              <button class="kpi-more">⋮</button>
+          <!-- Stat 4: Souvenir -->
+          <div class="stat-cell">
+            <div class="stat-cell-header">
+              <span class="stat-cell-title">Souvenir Terambil</span>
+              <span class="stat-cell-badge">Voucher</span>
             </div>
-            <div class="kpi-body">
-              <div class="kpi-label">Souvenir Diserahkan</div>
-              <div class="kpi-value" id="kpiSouvenir">0</div>
-              <div class="kpi-footer" id="kpiSouvenirSub">Kupon terambil</div>
+            <div class="stat-cell-value-wrap">
+              <span class="stat-cell-number" id="kpiSouvenir">0</span>
+              <span class="stat-cell-unit">Pcs</span>
             </div>
+            <div class="stat-cell-sub" id="kpiSouvenirSub">Stok: 300 pcs</div>
           </div>
 
-          <!-- Card 5: Purple -->
-          <div class="kpi-card purple">
-            <div class="kpi-top">
-              <div class="kpi-icon-wrap">🎰</div>
-              <button class="kpi-more" onclick="switchTab('doorprize')">⋮</button>
+          <!-- Stat 5: Doorprize Pool -->
+          <div class="stat-cell">
+            <div class="stat-cell-header">
+              <span class="stat-cell-title">Doorprize Pool</span>
+              <span class="stat-cell-badge">Hadir</span>
             </div>
-            <div class="kpi-body">
-              <div class="kpi-label">Doorprize Pool</div>
-              <div class="kpi-value" id="kpiDoorprize">0</div>
-              <div class="kpi-footer" id="kpiDoorprizeSub">Kupon aktif diundi</div>
+            <div class="stat-cell-value-wrap">
+              <span class="stat-cell-number" id="kpiDoorprize">0</span>
+              <span class="stat-cell-unit">Kupon</span>
             </div>
+            <div class="stat-cell-sub" id="kpiDoorprizeSub">Tamu terdaftar hadir</div>
           </div>
         </div>
 

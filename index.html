@@ -28,6 +28,14 @@
     </div>
 
     <ul class="nav-menu">
+      <!-- Project Hub Quick Access -->
+      <li class="nav-item" data-tab="projects" style="margin-bottom: 8px;">
+        <button class="nav-btn" data-tab="projects" style="font-weight:600;">
+          <span class="nav-icon">📁</span>
+          <span>Daftar Proyek Acara</span>
+        </button>
+      </li>
+
       <span class="section-tag">Meja Resepsi (Hari H)</span>
       <li class="nav-item active" data-tab="dashboard">
         <button class="nav-btn" data-tab="dashboard">
@@ -54,22 +62,16 @@
           <span>Meja & Kursi</span>
         </button>
       </li>
-      <li class="nav-item" data-tab="doorprize">
-        <button class="nav-btn" data-tab="doorprize">
-          <span class="nav-icon">🎁</span>
-          <span>Stage Doorprize</span>
-        </button>
-      </li>
-      <li class="nav-item" data-tab="printer">
-        <button class="nav-btn" data-tab="printer">
-          <span class="nav-icon">🖨️</span>
-          <span>Thermal 58mm</span>
-        </button>
-      </li>
       <li class="nav-item" data-tab="angpao">
         <button class="nav-btn" data-tab="angpao">
           <span class="nav-icon">🧧</span>
           <span>Titipan Angpao & Kado</span>
+        </button>
+      </li>
+      <li class="nav-item" data-tab="settings">
+        <button class="nav-btn" data-tab="settings">
+          <span class="nav-icon">⚙️</span>
+          <span>Pengaturan</span>
         </button>
       </li>
 
@@ -114,9 +116,9 @@
           <span class="burger-line"></span>
           <span class="burger-line"></span>
         </button>
-        <div class="topbar-event-meta">
+        <div class="topbar-event-meta" onclick="switchTab('projects')" style="cursor:pointer;" title="Klik untuk beralih atau kelola proyek acara pernikahan">
           <span class="topbar-event-title" id="topbarTitle">Wedding Reception</span>
-          <span class="topbar-event-sub" id="topbarSubtitle">Kevin & Nadya • 24 Okt 2026</span>
+          <span class="topbar-event-sub" id="topbarSubtitle">Kevin & Nadya • 24 Okt 2026 ▾</span>
         </div>
       </div>
 
@@ -128,7 +130,7 @@
         </div>
       </div>
 
-      <!-- Right: Mode Control & Hardware Status -->
+      <!-- Right: Mode Control & Settings -->
       <div class="topbar-right">
         <!-- Segmented Mode Control -->
         <div class="segmented-mode-control">
@@ -136,22 +138,32 @@
           <button class="seg-btn" id="segModePlanner" onclick="switchWorkspaceMode('planner')">Planner Studio</button>
         </div>
 
-        <!-- Smartphone Remote Button (Only in Reception Mode) -->
-        <button class="device-btn" id="remotePill" onclick="openRemoteModal()" title="Koneksi Remote Smartphone via QR">
-          <span>📱</span>
-          <span id="remotePillLabel">Remote HP</span>
-        </button>
-
-        <!-- Bluetooth Thermal Printer Button -->
-        <button class="device-btn" id="printerStatusPill" onclick="togglePrinterConnect()" title="Status Bluetooth Thermal 58mm (Klik untuk Hubungkan)">
-          <span class="device-dot"></span>
-          <span id="printerDeviceLabel">Thermal 58mm</span>
+        <!-- Quick Settings Shortcut -->
+        <button class="burger-btn" onclick="switchTab('settings')" title="Buka Pengaturan (Printer Thermal 58mm, Remote HP, Acara)">
+          ⚙️
         </button>
       </div>
     </header>
 
     <!-- Main Content Body -->
     <main class="content-body">
+
+      <!-- ================= 0. TAB: PROJECTS HUB (MULTI-PROJECT) ================= -->
+      <section class="tab-panel" id="tab-projects">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 24px; flex-wrap:wrap; gap:16px;">
+          <div>
+            <h2 style="font-size:1.35rem; font-weight:800; color:var(--text-dark);">📁 Daftar Proyek Pernikahan (Multi-Event)</h2>
+            <p style="font-size:0.85rem; color:var(--text-muted); margin-top:4px;">
+              Pilih acara yang ingin dikelola atau buat proyek pernikahan baru untuk pasangan berikutnya.
+            </p>
+          </div>
+          <button class="btn btn-primary" onclick="openCreateProjectModal()">
+            + Buat Acara Baru
+          </button>
+        </div>
+
+        <div class="projects-grid" id="projectsGridContainer"></div>
+      </section>
 
       <!-- ================= 1. TAB: DASHBOARD ================= -->
       <section class="tab-panel active" id="tab-dashboard">
@@ -208,19 +220,6 @@
             </div>
             <div class="stat-cell-sub" id="kpiSouvenirSub">Stok: 300 pcs</div>
           </div>
-
-          <!-- Stat 5: Doorprize Pool -->
-          <div class="stat-cell">
-            <div class="stat-cell-header">
-              <span class="stat-cell-title">Doorprize Pool</span>
-              <span class="stat-cell-badge">Hadir</span>
-            </div>
-            <div class="stat-cell-value-wrap">
-              <span class="stat-cell-number" id="kpiDoorprize">0</span>
-              <span class="stat-cell-unit">Kupon</span>
-            </div>
-            <div class="stat-cell-sub" id="kpiDoorprizeSub">Tamu terdaftar hadir</div>
-          </div>
         </div>
 
         <!-- Analytics Row -->
@@ -275,14 +274,23 @@
           <table class="custom-table">
             <thead>
               <tr>
-                <th>No</th>
-                <th>Tamu Undangan</th>
-                <th>Tempat Duduk</th>
-                <th>Pax</th>
-                <th>Kategori</th>
-                <th>Status</th>
-                <th>No Doorprize</th>
-                <th>Aksi</th>
+                <th style="width: 50px;">No</th>
+                <th class="sortable-header" data-sort="name" onclick="sortGuestsBy('name')" title="Klik untuk mengurutkan berdasar Nama Tamu">
+                  Tamu Undangan <span class="sort-icon">⇅</span>
+                </th>
+                <th class="sortable-header" data-sort="table" onclick="sortGuestsBy('table')" title="Klik untuk mengurutkan berdasar Tempat Duduk">
+                  Tempat Duduk <span class="sort-icon">⇅</span>
+                </th>
+                <th class="sortable-header" data-sort="pax" onclick="sortGuestsBy('pax')" title="Klik untuk mengurutkan berdasar Pax">
+                  Pax <span class="sort-icon">⇅</span>
+                </th>
+                <th class="sortable-header" data-sort="category" onclick="sortGuestsBy('category')" title="Klik untuk mengurutkan berdasar Kategori">
+                  Kategori <span class="sort-icon">⇅</span>
+                </th>
+                <th class="sortable-header" data-sort="status" onclick="sortGuestsBy('status')" title="Klik untuk mengurutkan berdasar Status Kedatangan">
+                  Status Kedatangan <span class="sort-icon">⇅</span>
+                </th>
+                <th style="width: 140px; text-align: right;">Aksi</th>
               </tr>
             </thead>
             <tbody id="guestTableBody"></tbody>
@@ -368,14 +376,23 @@
           <table class="custom-table">
             <thead>
               <tr>
-                <th>No</th>
-                <th>Tamu Undangan</th>
-                <th>Tempat Duduk</th>
-                <th>Pax</th>
-                <th>Kategori</th>
-                <th>Status</th>
-                <th>No Doorprize</th>
-                <th>Aksi</th>
+                <th style="width: 50px;">No</th>
+                <th class="sortable-header" data-sort="name" onclick="sortGuestsBy('name')" title="Klik untuk mengurutkan berdasar Nama Tamu">
+                  Tamu Undangan <span class="sort-icon">⇅</span>
+                </th>
+                <th class="sortable-header" data-sort="table" onclick="sortGuestsBy('table')" title="Klik untuk mengurutkan berdasar Tempat Duduk">
+                  Tempat Duduk <span class="sort-icon">⇅</span>
+                </th>
+                <th class="sortable-header" data-sort="pax" onclick="sortGuestsBy('pax')" title="Klik untuk mengurutkan berdasar Pax">
+                  Pax <span class="sort-icon">⇅</span>
+                </th>
+                <th class="sortable-header" data-sort="category" onclick="sortGuestsBy('category')" title="Klik untuk mengurutkan berdasar Kategori">
+                  Kategori <span class="sort-icon">⇅</span>
+                </th>
+                <th class="sortable-header" data-sort="status" onclick="sortGuestsBy('status')" title="Klik untuk mengurutkan berdasar Status Kedatangan">
+                  Status Kedatangan <span class="sort-icon">⇅</span>
+                </th>
+                <th style="width: 140px; text-align: right;">Aksi</th>
               </tr>
             </thead>
             <tbody id="guestTableBodyTab"></tbody>
@@ -392,63 +409,122 @@
         <div id="tableCardsGrid" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:18px;"></div>
       </section>
 
-      <!-- ================= 5. TAB: STAGE DOORPRIZE ================= -->
-      <section class="tab-panel" id="tab-doorprize">
-        <div class="doorprize-stage">
-          <h2>★ PENGUNDIAN DOORPRIZE WEDDING ★</h2>
-          <p style="color:#94A3B8; font-size:0.95rem; margin-top:8px;" id="doorprizeEligibleCount">
-            0 Tamu Hadir Berhak Mengikuti Undian
-          </p>
-
-          <div class="doorprize-roller" id="doorprizeDisplay">
-            #DP-????
-          </div>
-
-          <div id="doorprizeWinnerInfo" style="font-size:1.2rem; min-height:48px; color:#FBBF24; margin-bottom:24px;">
-            Tekan tombol di bawah untuk memulai undian acak
-          </div>
-
-          <button class="btn btn-primary" style="background:#F59E0B; color:#000; font-size:1.1rem; padding:14px 32px; border-radius:30px;" onclick="spinDoorprize()">
-            🎲 PUTAR UNDIAN SEKARANG
-          </button>
+      <!-- ================= 5. TAB: SETTINGS ================= -->
+      <section class="tab-panel" id="tab-settings">
+        <div style="margin-bottom: 24px;">
+          <h2 style="font-size:1.3rem; font-weight:700;">Pengaturan Sistem & Perangkat</h2>
+          <p style="font-size:0.82rem; color:var(--text-muted);">Kelola koneksi printer thermal, pairing remote smartphone, dan data acara.</p>
         </div>
-      </section>
 
-      <!-- ================= 6. TAB: PRINTER SETTINGS ================= -->
-      <section class="tab-panel" id="tab-printer">
-        <div class="table-card" style="padding:28px; max-width:650px;">
-          <h3 style="font-weight:700; margin-bottom:12px;">Konfigurasi Thermal Printer 58mm</h3>
-          <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:20px;">
-            Aplikasi berkomunikasi langsung dengan printer thermal Bluetooth portabel menggunakan protokol ESC/POS tanpa driver instalasi tambahan.
-          </p>
-
-          <div style="background:#F8FAFC; border:1px solid var(--border-light); border-radius:12px; padding:18px; margin-bottom:20px;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div class="settings-grid">
+          <!-- Card 1: Printer Thermal Bluetooth 58mm -->
+          <div class="settings-card">
+            <div class="settings-card-header">
               <div>
-                <strong style="font-size:0.92rem; display:block;">Koneksi Bluetooth</strong>
-                <span style="font-size:0.78rem; color:var(--text-muted);">Panda, Iware, Zjiang, Xprinter, Sunmi 58mm</span>
+                <h3 style="font-size:1.05rem; font-weight:700;">🖨️ Printer Thermal Bluetooth 58mm</h3>
+                <p style="font-size:0.8rem; color:var(--text-muted);">Koneksi nirkabel langsung via Web Bluetooth (ESC/POS)</p>
               </div>
-              <button class="btn btn-primary btn-sm" onclick="togglePrinterConnect()">
-                Pair Bluetooth
-              </button>
+              <span class="badge badge-status-out" id="settingsPrinterBadge">Terputus</span>
+            </div>
+
+            <div class="settings-card-body">
+              <div class="settings-info-row">
+                <span style="font-size:0.85rem; color:var(--text-muted);">Perangkat Aktif:</span>
+                <strong id="settingsPrinterDevice">Belum Terhubung</strong>
+              </div>
+
+              <div style="margin: 16px 0;">
+                <label style="display:flex; align-items:center; gap:10px; font-size:0.85rem; font-weight:600; cursor:pointer;">
+                  <input type="checkbox" id="settingsAutoPrintCheck" checked onchange="Thermal58.autoPrintEnabled = this.checked">
+                  Auto-Print: Cetak struk otomatis saat QR tamu di-scan
+                </label>
+              </div>
+
+              <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:16px;">
+                <button class="btn btn-primary btn-sm" id="btnConnectPrinter" onclick="togglePrinterConnect()">
+                  Pairing Bluetooth
+                </button>
+                <button class="btn btn-outline btn-sm" onclick="openVirtualReceiptModal(appGuests[0])">
+                  Cetak Sampel Struk 58mm
+                </button>
+              </div>
             </div>
           </div>
 
-          <div style="margin-bottom:20px;">
-            <label style="display:flex; align-items:center; gap:10px; font-size:0.88rem; font-weight:600; cursor:pointer;">
-              <input type="checkbox" id="autoPrintCheck" checked onchange="Thermal58.autoPrintEnabled = this.checked">
-              Cetak Struk Otomatis Sesaat Setelah QR Di-scan (Auto-Print)
-            </label>
+          <!-- Card 2: Remote Scanner Smartphone -->
+          <div class="settings-card">
+            <div class="settings-card-header">
+              <div>
+                <h3 style="font-size:1.05rem; font-weight:700;">📱 Remote Scanner Smartphone</h3>
+                <p style="font-size:0.8rem; color:var(--text-muted);">Jadikan smartphone sebagai pemindai barcode nirkabel via QR Code</p>
+              </div>
+              <span class="badge badge-status-out" id="settingsRemoteStatus">Belum Terhubung</span>
+            </div>
+
+            <div class="settings-card-body" style="text-align:center;">
+              <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:12px;">
+                Scan QR Code di bawah dengan kamera smartphone (tanpa install aplikasi):
+              </p>
+              <div id="settingsRemotePairingQR" style="display:flex; justify-content:center; margin-bottom:12px;"></div>
+              <div style="font-size:0.72rem; color:#94A3B8; font-family:var(--font-mono); background:#F8FAFC; padding:6px 10px; border-radius:6px; word-break:break-all;" id="settingsRemotePairingUrl">
+                Memuat QR Pairing...
+              </div>
+            </div>
           </div>
 
-          <div style="border-top:1px solid var(--border-light); padding-top:20px;">
-            <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:10px;">Test Cetak Struk 58mm</h4>
-            <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:14px;">
-              Uji coba output teks, garis pemisah, penataan meja, dan kupon undian.
-            </p>
-            <button class="btn btn-outline" onclick="openVirtualReceiptModal(appGuests[0])">
-              🖨️ Cetak Sampel Struk 58mm
-            </button>
+          <!-- Card 3: Informasi Acara & Souvenir -->
+          <div class="settings-card">
+            <div class="settings-card-header">
+              <div>
+                <h3 style="font-size:1.05rem; font-weight:700;">💒 Informasi Acara & Souvenir</h3>
+                <p style="font-size:0.8rem; color:var(--text-muted);">Detail nama pengantin, venue, dan target souvenir</p>
+              </div>
+            </div>
+
+            <div class="settings-card-body">
+              <div class="form-group">
+                <label>Nama Pasangan Pengantin</label>
+                <input type="text" class="form-control" id="settingsEventCouple" value="Kevin & Nadya" onchange="updateEventMetaFromSettings()">
+              </div>
+              <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                <div class="form-group">
+                  <label>Tanggal Acara</label>
+                  <input type="text" class="form-control" id="settingsEventDate" value="24 Oktober 2026" onchange="updateEventMetaFromSettings()">
+                </div>
+                <div class="form-group">
+                  <label>Lokasi / Venue</label>
+                  <input type="text" class="form-control" id="settingsEventVenue" value="Grand Ballroom Pullman" onchange="updateEventMetaFromSettings()">
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Total Stok Souvenir Fisik</label>
+                <input type="number" class="form-control" id="settingsSouvenirTotal" value="300" onchange="updateEventMetaFromSettings()">
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 4: Cadangan & Reset Data -->
+          <div class="settings-card">
+            <div class="settings-card-header">
+              <div>
+                <h3 style="font-size:1.05rem; font-weight:700;">💾 Cadangan Data & Reset</h3>
+                <p style="font-size:0.8rem; color:var(--text-muted);">Simpan backup JSON atau kembalikan ke data awal demo</p>
+              </div>
+            </div>
+
+            <div class="settings-card-body">
+              <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:16px;">
+                Data disimpan secara lokal di browser ini. Anda dapat mengunduh backup lengkap untuk dipindahkan ke laptop lain.
+              </p>
+              <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <button class="btn btn-outline btn-sm" onclick="downloadJSONBackup()">
+                  📥 Unduh Backup JSON
+                </button>
+                <button class="btn btn-outline btn-sm" style="color:#DC2626; border-color:#FECACA;" onclick="resetDemoData()">
+                  ⚠️ Reset Data Demo
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -720,6 +796,46 @@
     </div>
     <div class="modal-footer" style="justify-content:center;">
       <button class="btn btn-primary" onclick="closeRemoteModal()">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<!-- 7. Create New Project Modal -->
+<div class="modal-overlay" id="createProjectModal">
+  <div class="modal-window">
+    <div class="modal-header">
+      <h3>Buat Proyek Acara Pernikahan Baru</h3>
+      <button class="modal-close" onclick="closeCreateProjectModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Nama Pasangan Pengantin *</label>
+        <input type="text" class="form-control" id="newProjectCouple" placeholder="Contoh: Dimas & Sarah">
+      </div>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+        <div class="form-group">
+          <label>Tanggal Acara</label>
+          <input type="text" class="form-control" id="newProjectDate" placeholder="Contoh: 14 November 2026">
+        </div>
+        <div class="form-group">
+          <label>Lokasi / Venue</label>
+          <input type="text" class="form-control" id="newProjectVenue" placeholder="Contoh: Grand Ballroom Ritz-Carlton">
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+        <div class="form-group">
+          <label>Estimasi Pax Tamu</label>
+          <input type="number" class="form-control" id="newProjectPax" value="250" min="10">
+        </div>
+        <div class="form-group">
+          <label>Total Stok Souvenir</label>
+          <input type="number" class="form-control" id="newProjectSouvenir" value="300" min="10">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeCreateProjectModal()">Batal</button>
+      <button class="btn btn-primary" onclick="createNewProject()">Simpan & Buat Acara</button>
     </div>
   </div>
 </div>

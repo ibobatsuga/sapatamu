@@ -76,39 +76,51 @@ const SapaRemote = {
     }
   },
 
-  // Update pairing QR code in modal
+  // Update pairing QR code in modal and settings tab
   updateHostPairingQR() {
-    const container = document.getElementById("remotePairingQR");
-    if (!container || !this.roomId) return;
-    container.innerHTML = "";
+    const containers = [
+      document.getElementById("remotePairingQR"),
+      document.getElementById("settingsRemotePairingQR")
+    ].filter(Boolean);
+
+    if (containers.length === 0 || !this.roomId) return;
 
     const joinUrl = `${window.location.origin}${window.location.pathname}?remote=${this.roomId}`;
-    const urlDisplay = document.getElementById("remotePairingUrl");
-    if (urlDisplay) urlDisplay.textContent = joinUrl;
+    const urlDisplays = [
+      document.getElementById("remotePairingUrl"),
+      document.getElementById("settingsRemotePairingUrl")
+    ].filter(Boolean);
 
-    if (window.QRCode) {
-      new QRCode(container, {
-        text: joinUrl,
-        width: 220,
-        height: 220,
-        colorDark: "#0F172A",
-        colorLight: "#FFFFFF",
-        correctLevel: QRCode.CorrectLevel.M
-      });
-    }
+    urlDisplays.forEach(el => el.textContent = joinUrl);
+
+    containers.forEach(container => {
+      container.innerHTML = "";
+      if (window.QRCode) {
+        new QRCode(container, {
+          text: joinUrl,
+          width: 200,
+          height: 200,
+          colorDark: "#0F172A",
+          colorLight: "#FFFFFF",
+          correctLevel: QRCode.CorrectLevel.M
+        });
+      }
+    });
   },
 
   updateHostUIStatus(hasActive) {
-    const pill = document.getElementById("remotePill");
-    if (pill) {
+    const statusLabels = [
+      document.getElementById("settingsRemoteStatus"),
+      document.getElementById("remotePillLabel")
+    ].filter(Boolean);
+
+    statusLabels.forEach(el => {
       if (hasActive) {
-        pill.className = "printer-pill connected";
-        pill.innerHTML = `<span>📱</span> <span>HP Terhubung (${this.connectedDevices})</span>`;
+        el.textContent = `🟢 ${this.connectedDevices} HP Terhubung`;
       } else {
-        pill.className = "printer-pill disconnected";
-        pill.innerHTML = `<span>📱</span> <span>Remote HP</span>`;
+        el.textContent = "Belum Terhubung";
       }
-    }
+    });
   },
 
   broadcastHostState() {
@@ -159,15 +171,10 @@ const SapaRemote = {
           seatZone: guest.seatZone,
           pax: guest.pax,
           category: guest.category,
-          doorprize: guest.doorprize,
           checkedInAt: guest.checkedInAt
         }
       });
       this.broadcastHostState();
-    } else if (data.type === "TRIGGER_SPIN") {
-      switchTab("doorprize");
-      spinDoorprize();
-      showToast("Remote Trigger", "Pengundian doorprize dipicu dari smartphone MC!", "info");
     }
   },
 
@@ -269,7 +276,7 @@ const SapaRemote = {
     }
   },
 
-  // Render Full Mobile Remote Shell (Transforms Smartphone Screen)
+  // Render Full Mobile Remote Shell (Dedicated Fast Wireless QR Scanner Gun)
   renderMobileRemoteShell() {
     document.body.innerHTML = `
       <div class="mobile-remote-container">
@@ -277,7 +284,7 @@ const SapaRemote = {
         <header class="mobile-remote-header">
           <div style="display:flex; align-items:center; gap:8px;">
             <div class="brand-icon" style="width:28px; height:28px; font-size:0.85rem;">❖</div>
-            <strong style="font-size:0.95rem;">SapaTamu Remote</strong>
+            <strong style="font-size:0.95rem;">SapaTamu Scanner Gun</strong>
           </div>
           <div id="remoteStatusIndicator" class="mobile-status-connecting">
             <span id="remoteStatusText">Menghubungkan...</span>
@@ -298,17 +305,7 @@ const SapaRemote = {
           </div>
         </div>
 
-        <!-- Mobile Tabs Nav -->
-        <div class="mobile-nav-pills">
-          <button class="m-nav-btn active" id="btnMobScanner" onclick="SapaRemote.switchMobileTab('scanner')">
-            📷 Scanner HP
-          </button>
-          <button class="m-nav-btn" id="btnMobMC" onclick="SapaRemote.switchMobileTab('mc')">
-            🎲 MC Doorprize
-          </button>
-        </div>
-
-        <!-- 1. Mobile Scanner View -->
+        <!-- Mobile Scanner View -->
         <div id="mobileTabScanner" class="mobile-tab-view active">
           <div class="mobile-camera-box">
             <div id="mobileReader"></div>
@@ -324,20 +321,8 @@ const SapaRemote = {
           </div>
         </div>
 
-        <!-- 2. Mobile MC Stage View -->
-        <div id="mobileTabMC" class="mobile-tab-view" style="display:none; text-align:center; padding:30px 16px;">
-          <h3 style="font-size:1.2rem; font-weight:800; margin-bottom:8px;">Kontrol Panggung MC</h3>
-          <p style="font-size:0.82rem; color:#64748B; margin-bottom:28px;">
-            Tekan tombol di bawah untuk memutar undian doorprize di layar proyektor / LED panggung utama.
-          </p>
-
-          <button class="mobile-spin-btn" onclick="SapaRemote.sendSpinToHost()">
-            🎲 PUTAR UNDIAN SEKARANG
-          </button>
-        </div>
-
-        <div style="text-align:center; padding:16px; font-size:0.75rem; color:#94A3B8;">
-          SapaTamu Wireless Remote • WebRTC P2P
+        <div style="text-align:center; padding:18px; font-size:0.75rem; color:#94A3B8;">
+          Arahkan kamera ke QR undangan tamu. Data otomatis dikirim ke laptop meja registrasi.
         </div>
       </div>
     `;

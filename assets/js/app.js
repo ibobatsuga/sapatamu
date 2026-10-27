@@ -850,10 +850,10 @@ async function testSupabaseConnection() {
   }
 }
 
-// Sidebar Toggle & Collapse Handlers
+// Sidebar Toggle & Collapse Handlers (Tablet-First Responsive)
 function toggleSidebar() {
-  const isMobile = window.innerWidth <= 768;
-  if (isMobile) {
+  const isTabletPortraitOrMobile = window.innerWidth <= 880;
+  if (isTabletPortraitOrMobile) {
     document.body.classList.toggle("sidebar-open-mobile");
   } else {
     document.body.classList.toggle("sidebar-collapsed");
@@ -862,7 +862,7 @@ function toggleSidebar() {
 }
 
 function initSidebarState() {
-  if (window.innerWidth > 768) {
+  if (window.innerWidth > 880) {
     if (localStorage.getItem("vow_sidebar_collapsed") === "true") {
       document.body.classList.add("sidebar-collapsed");
     }
@@ -908,7 +908,7 @@ function setupNavigation() {
     btn.addEventListener("click", () => {
       const target = btn.dataset.tab;
       switchTab(target);
-      if (window.innerWidth <= 768) {
+      if (window.innerWidth <= 880) {
         document.body.classList.remove("sidebar-open-mobile");
       }
     });

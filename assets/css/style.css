@@ -51,14 +51,23 @@
   box-sizing: border-box;
 }
 
+html {
+  font-size: 15.2px; /* 95% compact scale of standard 16px, without browser zoom gaps */
+  width: 100%;
+  min-height: 100%;
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   font-family: var(--font-main);
   background-color: var(--bg-page);
   color: var(--text-main);
   min-height: 100vh;
+  width: 100%;
+  margin: 0;
+  padding: 0;
   display: flex;
   overflow-x: hidden;
-  zoom: 0.95;
 }
 
 /* ========================================================
@@ -66,12 +75,14 @@ body {
 ======================================================== */
 .app-container {
   display: flex;
-  width: 100vw;
+  width: 100%;
+  min-width: 100%;
   min-height: 100vh;
+  flex: 1;
 }
 
 .sidebar {
-  width: 250px;
+  width: 240px;
   background-color: #FFFFFF;
   border-right: 1px solid var(--border-light);
   display: flex;
@@ -86,12 +97,14 @@ body {
 }
 
 .main-wrapper {
-  margin-left: 250px;
+  margin-left: 240px;
   flex: 1;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  transition: margin-left 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  min-width: 0;
+  width: calc(100% - 240px);
+  transition: margin-left 0.25s cubic-bezier(0.16, 1, 0.3, 1), width 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 body.sidebar-collapsed .sidebar {
@@ -100,6 +113,7 @@ body.sidebar-collapsed .sidebar {
 
 body.sidebar-collapsed .main-wrapper {
   margin-left: 0;
+  width: 100%;
 }
 
 .sidebar-backdrop {
@@ -1551,14 +1565,82 @@ body.mobile-remote-active {
 }
 
 /* ========================================================
-   RESPONSIVE DESIGN SYSTEM (DESKTOP FIRST, TABLET & MOBILE)
+   RESPONSIVE DESIGN SYSTEM (TABLET FIRST ARCHITECTURE)
 ======================================================== */
 
-/* --- TABLET ADAPTATIONS (max-width: 1024px) --- */
-@media (max-width: 1024px) {
+/* --- TABLET LANDSCAPE & DESKTOP COMPACT (881px - 1080px) --- */
+@media (min-width: 881px) and (max-width: 1080px) {
+  .sidebar {
+    width: 220px;
+  }
+  .main-wrapper {
+    margin-left: 220px;
+    width: calc(100% - 220px);
+  }
+  body.sidebar-collapsed .main-wrapper {
+    margin-left: 0;
+    width: 100%;
+  }
+
   .topbar-center {
-    max-width: 240px;
-    margin: 0 12px;
+    max-width: 220px;
+    margin: 0 10px;
+  }
+  
+  .stats-strip {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  
+  .analytics-grid {
+    grid-template-columns: 1.35fr 1fr;
+    gap: 16px;
+  }
+  
+  #tableCardsGrid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  
+  .projects-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  
+  #plannerSeatingStats {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  
+  .settings-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+}
+
+/* --- TABLET PORTRAIT (768px - 880px) --- */
+@media (min-width: 768px) and (max-width: 880px) {
+  /* Sidebar as Off-canvas Drawer on portrait tablet to give 100% workspace */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 260px;
+    z-index: 100;
+    transform: translateX(-100%);
+    box-shadow: var(--shadow-lg);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  
+  body.sidebar-open-mobile .sidebar {
+    transform: translateX(0);
+  }
+  
+  .main-wrapper {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+  
+  .topbar-center {
+    max-width: 200px;
+    margin: 0 10px;
   }
   
   .stats-strip {
@@ -1574,6 +1656,7 @@ body.mobile-remote-active {
   
   .analytics-grid {
     grid-template-columns: 1fr;
+    gap: 16px;
   }
   
   #tableCardsGrid {
@@ -1593,10 +1676,10 @@ body.mobile-remote-active {
   }
 }
 
-/* --- MOBILE & SMALL TABLET (max-width: 768px) --- */
-@media (max-width: 768px) {
-  body {
-    zoom: 1;
+/* --- MOBILE & SMALL SCREENS (max-width: 767px) --- */
+@media (max-width: 767px) {
+  html {
+    font-size: 14.5px;
   }
 
   /* Sidebar as Off-canvas Drawer */
@@ -1618,6 +1701,7 @@ body.mobile-remote-active {
   
   .main-wrapper {
     margin-left: 0 !important;
+    width: 100% !important;
   }
   
   /* Topbar */

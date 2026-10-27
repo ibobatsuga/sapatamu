@@ -581,6 +581,12 @@ function applyWorkspaceModeUI() {
     receptionNavItems.forEach(el => el.style.display = "none");
   }
 
+  // Toggle CSV & Planner-only action buttons
+  const plannerActions = document.querySelectorAll(".planner-only-action");
+  plannerActions.forEach(el => {
+    el.style.display = (currentMode === "planner") ? "inline-flex" : "none";
+  });
+
   if (window.SapaRemote && SapaRemote.isHost) {
     SapaRemote.broadcastHostState();
   }
@@ -1300,14 +1306,74 @@ function updateSortHeadersUI() {
   });
 }
 
+// ========================================================
+// PAGINATION CONTROLLERS (10 / 25 / 50 / ALL PER PAGE)
+// ========================================================
+const paginationState = {
+  guests: { page: 1, perPage: 10 },
+  guestsTab: { page: 1, perPage: 10 },
+  vendors: { page: 1, perPage: 10 },
+  checklist: { page: 1, perPage: 10 },
+  angpao: { page: 1, perPage: 10 }
+};
+
+function paginateArray(items, page, perPage) {
+  if (perPage === "ALL") {
+    return {
+      paged: items,
+      total: items.length,
+      totalPages: 1,
+      page: 1,
+      startIndex: 0,
+      endIndex: items.length
+    };
+  }
+  const perPageNum = parseInt(perPage, 10) || 10;
+  const total = items.length;
+  const totalPages = Math.max(1, Math.ceil(total / perPageNum));
+  const currentPage = Math.min(Math.max(1, page), totalPages);
+  const startIndex = (currentPage - 1) * perPageNum;
+  const endIndex = Math.min(startIndex + perPageNum, total);
+  const paged = items.slice(startIndex, endIndex);
+
+  return {
+    paged,
+    total,
+    totalPages,
+    page: currentPage,
+    startIndex,
+    endIndex
+  };
+}
+
+function updatePaginationUI(prefix, pageInfo, perPageVal) {
+  const rangeEl = document.getElementById(`${prefix}InfoRange`);
+  const totalEl = document.getElementById(`${prefix}InfoTotal`);
+  const selectEl = document.getElementById(`${prefix}PerPage`);
+  const prevBtn = document.getElementById(`${prefix}PrevBtn`);
+  const nextBtn = document.getElementById(`${prefix}NextBtn`);
+  const pageIndicator = document.getElementById(`${prefix}PageIndicator`);
+
+  if (rangeEl) {
+    rangeEl.textContent = pageInfo.total === 0 ? "0 - 0" : `${pageInfo.startIndex + 1} - ${pageInfo.endIndex}`;
+  }
+  if (totalEl) totalEl.textContent = pageInfo.total;
+  if (selectEl && selectEl.value !== String(perPageVal)) {
+    selectEl.value = String(perPageVal);
+  }
+  if (prevBtn) prevBtn.disabled = pageInfo.page <= 1;
+  if (nextBtn) nextBtn.disabled = pageInfo.page >= pageInfo.totalPages;
+  if (pageIndicator) {
+    pageIndicator.textContent = `Hal ${pageInfo.page} dari ${pageInfo.totalPages}`;
+  }
+}
+
 // 4. Render Guest Table
 function renderGuestTable() {
-  const tbodies = [
-    document.getElementById("guestTableBody"),
-    document.getElementById("guestTableBodyTab")
-  ].filter(Boolean);
+  const tbodyDashboard = document.getElementById("guestTableBody");
+  const tbodyTab = document.getElementById("guestTableBodyTab");
 
-  if (tbodies.length === 0) return;
+  if (!tbodyDashboard && !tbodyTab) return;
 
   const searchQuery = (document.getElementById("globalSearchInput")?.value || "").toLowerCase();
   const filterCat = document.getElementById("filterCategorySelect")?.value || "ALL";
@@ -1351,11 +1417,11 @@ function renderGuestTable() {
     });
   }
 
-  const html = filtered.map((g, idx) => {
+  const renderGuestRow = (g, displayIndex) => {
     const avatarClass = g.category === "VIP" ? "vip" : g.category === "Keluarga" ? "family" : "";
     return `
       <tr>
-        <td style="color:var(--text-muted); font-weight:600;">#${idx + 1}</td>
+        <td style="color:var(--text-muted); font-weight:600;">#${displayIndex}</td>
         <td>
           <div class="guest-profile-cell">
             <div class="guest-avatar ${avatarClass}">${g.name.charAt(0)}</div>
@@ -1396,9 +1462,64 @@ function renderGuestTable() {
         </td>
       </tr>
     `;
-  }).join("");
+  };
 
-  tbodies.forEach(tb => tb.innerHTML = html);
+  if (tbodyDashboard) {
+    const pInfo = paginateArray(filtered, paginationState.guests.page, paginationState.guests.perPage);
+    paginationState.guests.page = pInfo.page;
+    tbodyDashboard.innerHTML = pInfo.paged.map((g, idx) => renderGuestRow(g, pInfo.startIndex + idx + 1)).join("");
+    const rangeEl = document.getElementById("guestInfoRangeDashboard");
+    const totalEl = document.getElementById("guestInfoTotalDashboard");
+    const selectEl = document.getElementById("guestPerPageDashboard");
+    const prevBtn = document.getElementById("guestPrevBtnDashboard");
+    const nextBtn = document.getElementById("guestNextBtnDashboard");
+    const pageIndicator = document.getElementById("guestPageIndicatorDashboard");
+    if (rangeEl) rangeEl.textContent = pInfo.total === 0 ? "0 - 0" : `${pInfo.startIndex + 1} - ${pInfo.endIndex}`;
+    if (totalEl) totalEl.textContent = pInfo.total;
+    if (selectEl) selectEl.value = String(paginationState.guests.perPage);
+    if (prevBtn) prevBtn.disabled = pInfo.page <= 1;
+    if (nextBtn) nextBtn.disabled = pInfo.page >= pInfo.totalPages;
+    if (pageIndicator) pageIndicator.textContent = `Hal ${pInfo.page} dari ${pInfo.totalPages}`;
+  }
+
+  if (tbodyTab) {
+    const pInfo = paginateArray(filtered, paginationState.guestsTab.page, paginationState.guestsTab.perPage);
+    paginationState.guestsTab.page = pInfo.page;
+    tbodyTab.innerHTML = pInfo.paged.map((g, idx) => renderGuestRow(g, pInfo.startIndex + idx + 1)).join("");
+    const rangeEl = document.getElementById("guestInfoRangeTab");
+    const totalEl = document.getElementById("guestInfoTotalTab");
+    const selectEl = document.getElementById("guestPerPageTab");
+    const prevBtn = document.getElementById("guestPrevBtnTab");
+    const nextBtn = document.getElementById("guestNextBtnTab");
+    const pageIndicator = document.getElementById("guestPageIndicatorTab");
+    if (rangeEl) rangeEl.textContent = pInfo.total === 0 ? "0 - 0" : `${pInfo.startIndex + 1} - ${pInfo.endIndex}`;
+    if (totalEl) totalEl.textContent = pInfo.total;
+    if (selectEl) selectEl.value = String(paginationState.guestsTab.perPage);
+    if (prevBtn) prevBtn.disabled = pInfo.page <= 1;
+    if (nextBtn) nextBtn.disabled = pInfo.page >= pInfo.totalPages;
+    if (pageIndicator) pageIndicator.textContent = `Hal ${pInfo.page} dari ${pInfo.totalPages}`;
+  }
+}
+
+function changeGuestPerPage(val, source = 'dashboard') {
+  const perPageVal = val === 'ALL' ? 'ALL' : parseInt(val, 10);
+  if (source === 'dashboard') {
+    paginationState.guests.perPage = perPageVal;
+    paginationState.guests.page = 1;
+  } else {
+    paginationState.guestsTab.perPage = perPageVal;
+    paginationState.guestsTab.page = 1;
+  }
+  renderGuestTable();
+}
+
+function changeGuestPage(delta, source = 'dashboard') {
+  if (source === 'dashboard') {
+    paginationState.guests.page += delta;
+  } else {
+    paginationState.guestsTab.page += delta;
+  }
+  renderGuestTable();
 }
 
 // 5. Render Seating & Table Occupancy
@@ -1831,12 +1952,16 @@ function renderVendors() {
   const tbody = document.getElementById("vendorTableBody");
   if (!tbody) return;
 
-  tbody.innerHTML = appVendors.map((v, i) => {
+  const pInfo = paginateArray(appVendors, paginationState.vendors.page, paginationState.vendors.perPage);
+  paginationState.vendors.page = pInfo.page;
+
+  tbody.innerHTML = pInfo.paged.map((v, i) => {
     const cleanPhone = (v.phone || "").replace(/[^0-9]/g, "");
     const waPhone = cleanPhone.startsWith("0") ? "62" + cleanPhone.slice(1) : cleanPhone;
+    const displayIndex = pInfo.startIndex + i + 1;
     return `
       <tr>
-        <td style="color:var(--text-muted); font-weight:600;">#${i + 1}</td>
+        <td style="color:var(--text-muted); font-weight:600;">#${displayIndex}</td>
         <td>
           <div style="font-weight:700; color:var(--text-main); font-size:0.92rem;">${v.vendorName}</div>
           <div style="font-size:0.75rem; color:var(--text-muted);">${v.category}</div>
@@ -1863,6 +1988,19 @@ function renderVendors() {
       </tr>
     `;
   }).join("");
+
+  updatePaginationUI("vendor", pInfo, paginationState.vendors.perPage);
+}
+
+function changeVendorPerPage(val) {
+  paginationState.vendors.perPage = val === 'ALL' ? 'ALL' : parseInt(val, 10);
+  paginationState.vendors.page = 1;
+  renderVendors();
+}
+
+function changeVendorPage(delta) {
+  paginationState.vendors.page += delta;
+  renderVendors();
 }
 
 function openAddVendorModal() {
@@ -1955,10 +2093,14 @@ function renderChecklist() {
   const tbody = document.getElementById("checklistTableBody");
   if (!tbody) return;
 
-  tbody.innerHTML = appChecklist.map((c, i) => {
+  const pInfo = paginateArray(appChecklist, paginationState.checklist.page, paginationState.checklist.perPage);
+  paginationState.checklist.page = pInfo.page;
+
+  tbody.innerHTML = pInfo.paged.map((c, i) => {
+    const displayIndex = pInfo.startIndex + i + 1;
     return `
       <tr>
-        <td style="color:var(--text-muted); font-weight:600;">#${i + 1}</td>
+        <td style="color:var(--text-muted); font-weight:600;">#${displayIndex}</td>
         <td><span class="badge badge-family">${c.zone}</span></td>
         <td><strong>${c.item}</strong></td>
         <td>${c.qty}</td>
@@ -1977,6 +2119,19 @@ function renderChecklist() {
       </tr>
     `;
   }).join("");
+
+  updatePaginationUI("checklist", pInfo, paginationState.checklist.perPage);
+}
+
+function changeChecklistPerPage(val) {
+  paginationState.checklist.perPage = val === 'ALL' ? 'ALL' : parseInt(val, 10);
+  paginationState.checklist.page = 1;
+  renderChecklist();
+}
+
+function changeChecklistPage(delta) {
+  paginationState.checklist.page += delta;
+  renderChecklist();
 }
 
 function openAddChecklistModal() {
@@ -2072,10 +2227,14 @@ function renderAngpao() {
   const tbody = document.getElementById("angpaoTableBody");
   if (!tbody) return;
 
-  tbody.innerHTML = appAngpao.map((a, i) => {
+  const pInfo = paginateArray(appAngpao, paginationState.angpao.page, paginationState.angpao.perPage);
+  paginationState.angpao.page = pInfo.page;
+
+  tbody.innerHTML = pInfo.paged.map((a, i) => {
+    const displayIndex = pInfo.startIndex + i + 1;
     return `
       <tr>
-        <td style="color:var(--text-muted); font-weight:600;">#${i + 1}</td>
+        <td style="color:var(--text-muted); font-weight:600;">#${displayIndex}</td>
         <td><strong>${a.guestName}</strong></td>
         <td><span class="badge ${a.type.includes('Fisik') ? 'badge-vip' : 'badge-family'}">${a.type}</span></td>
         <td>${a.boxCode}</td>
@@ -2085,6 +2244,19 @@ function renderAngpao() {
       </tr>
     `;
   }).join("");
+
+  updatePaginationUI("angpao", pInfo, paginationState.angpao.perPage);
+}
+
+function changeAngpaoPerPage(val) {
+  paginationState.angpao.perPage = val === 'ALL' ? 'ALL' : parseInt(val, 10);
+  paginationState.angpao.page = 1;
+  renderAngpao();
+}
+
+function changeAngpaoPage(delta) {
+  paginationState.angpao.page += delta;
+  renderAngpao();
 }
 
 function addNewAngpaoRecord() {

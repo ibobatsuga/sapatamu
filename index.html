@@ -462,10 +462,10 @@
               <p>Status kehadiran langsung disinkronkan saat scan QR undangan digital.</p>
             </div>
             <div class="table-actions-group">
-              <button class="btn btn-outline" onclick="triggerCSVImport()" title="Unggah file CSV daftar tamu">
+              <button class="btn btn-outline planner-only-action" onclick="triggerCSVImport()" title="Unggah file CSV daftar tamu">
                 📤 Import CSV
               </button>
-              <button class="btn btn-outline" onclick="exportToUndangankuCSV()" title="Unduh CSV untuk dibagikan ke undanganku.id">
+              <button class="btn btn-outline planner-only-action" onclick="exportToUndangankuCSV()" title="Unduh CSV untuk dibagikan ke undanganku.id">
                 📥 Export CSV
               </button>
               <button class="btn btn-primary" onclick="switchTab('scanner')">
@@ -498,6 +498,29 @@
               </thead>
               <tbody id="guestTableBody"></tbody>
             </table>
+          </div>
+
+          <!-- Pagination Bar: Dashboard Guest Table -->
+          <div class="table-pagination-bar" id="paginationGuestDashboard">
+            <div class="pagination-info">
+              Menampilkan <strong id="guestInfoRangeDashboard">0 - 0</strong> dari <strong id="guestInfoTotalDashboard">0</strong> data
+            </div>
+            <div class="pagination-controls">
+              <div class="pagination-per-page">
+                <span>Tampilkan:</span>
+                <select class="form-control pagination-select" id="guestPerPageDashboard" onchange="changeGuestPerPage(this.value, 'dashboard')">
+                  <option value="10" selected>10</option>
+                  <option value="25">25</option>
+                  <option value="50">50</option>
+                  <option value="ALL">Semua</option>
+                </select>
+              </div>
+              <div class="pagination-nav-btns">
+                <button class="btn-pagination-nav" id="guestPrevBtnDashboard" onclick="changeGuestPage(-1, 'dashboard')" title="Halaman Sebelumnya">‹</button>
+                <span class="pagination-page-indicator" id="guestPageIndicatorDashboard">Hal 1 dari 1</span>
+                <button class="btn-pagination-nav" id="guestNextBtnDashboard" onclick="changeGuestPage(1, 'dashboard')" title="Halaman Berikutnya">›</button>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -563,13 +586,13 @@
                 <option value="Sahabat">Sahabat</option>
               </select>
 
-              <button class="btn btn-outline" onclick="triggerCSVImport()" title="Unggah file CSV daftar tamu dari Excel atau undanganku.id">
+              <button class="btn btn-outline planner-only-action" onclick="triggerCSVImport()" title="Unggah file CSV daftar tamu dari Excel atau undanganku.id">
                 📤 Import CSV
               </button>
-              <button class="btn btn-outline" onclick="exportToUndangankuCSV()" title="Unduh CSV untuk dibagikan ke undanganku.id">
+              <button class="btn btn-outline planner-only-action" onclick="exportToUndangankuCSV()" title="Unduh CSV untuk dibagikan ke undanganku.id">
                 📥 Export CSV
               </button>
-              <button class="btn btn-outline" onclick="downloadCSVTemplate()" title="Unduh format template Excel/CSV">
+              <button class="btn btn-outline planner-only-action" onclick="downloadCSVTemplate()" title="Unduh format template Excel/CSV">
                 📄 Template
               </button>
               <button class="btn btn-primary" onclick="openAddGuestModal()">
@@ -602,6 +625,29 @@
               </thead>
               <tbody id="guestTableBodyTab"></tbody>
             </table>
+          </div>
+
+          <!-- Pagination Bar: Tab Guest Table -->
+          <div class="table-pagination-bar" id="paginationGuestTab">
+            <div class="pagination-info">
+              Menampilkan <strong id="guestInfoRangeTab">0 - 0</strong> dari <strong id="guestInfoTotalTab">0</strong> data
+            </div>
+            <div class="pagination-controls">
+              <div class="pagination-per-page">
+                <span>Tampilkan:</span>
+                <select class="form-control pagination-select" id="guestPerPageTab" onchange="changeGuestPerPage(this.value, 'tab')">
+                  <option value="10" selected>10</option>
+                  <option value="25">25</option>
+                  <option value="50">50</option>
+                  <option value="ALL">Semua</option>
+                </select>
+              </div>
+              <div class="pagination-nav-btns">
+                <button class="btn-pagination-nav" id="guestPrevBtnTab" onclick="changeGuestPage(-1, 'tab')" title="Halaman Sebelumnya">‹</button>
+                <span class="pagination-page-indicator" id="guestPageIndicatorTab">Hal 1 dari 1</span>
+                <button class="btn-pagination-nav" id="guestNextBtnTab" onclick="changeGuestPage(1, 'tab')" title="Halaman Berikutnya">›</button>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -846,6 +892,29 @@
               <tbody id="vendorTableBody"></tbody>
             </table>
           </div>
+
+          <!-- Pagination Bar: Vendor Table -->
+          <div class="table-pagination-bar" id="paginationVendor">
+            <div class="pagination-info">
+              Menampilkan <strong id="vendorInfoRange">0 - 0</strong> dari <strong id="vendorInfoTotal">0</strong> data
+            </div>
+            <div class="pagination-controls">
+              <div class="pagination-per-page">
+                <span>Tampilkan:</span>
+                <select class="form-control pagination-select" id="vendorPerPage" onchange="changeVendorPerPage(this.value)">
+                  <option value="10" selected>10</option>
+                  <option value="25">25</option>
+                  <option value="50">50</option>
+                  <option value="ALL">Semua</option>
+                </select>
+              </div>
+              <div class="pagination-nav-btns">
+                <button class="btn-pagination-nav" id="vendorPrevBtn" onclick="changeVendorPage(-1)" title="Halaman Sebelumnya">‹</button>
+                <span class="pagination-page-indicator" id="vendorPageIndicator">Hal 1 dari 1</span>
+                <button class="btn-pagination-nav" id="vendorNextBtn" onclick="changeVendorPage(1)" title="Halaman Berikutnya">›</button>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -879,6 +948,29 @@
               <tbody id="checklistTableBody"></tbody>
             </table>
           </div>
+
+          <!-- Pagination Bar: Checklist Table -->
+          <div class="table-pagination-bar" id="paginationChecklist">
+            <div class="pagination-info">
+              Menampilkan <strong id="checklistInfoRange">0 - 0</strong> dari <strong id="checklistInfoTotal">0</strong> data
+            </div>
+            <div class="pagination-controls">
+              <div class="pagination-per-page">
+                <span>Tampilkan:</span>
+                <select class="form-control pagination-select" id="checklistPerPage" onchange="changeChecklistPerPage(this.value)">
+                  <option value="10" selected>10</option>
+                  <option value="25">25</option>
+                  <option value="50">50</option>
+                  <option value="ALL">Semua</option>
+                </select>
+              </div>
+              <div class="pagination-nav-btns">
+                <button class="btn-pagination-nav" id="checklistPrevBtn" onclick="changeChecklistPage(-1)" title="Halaman Sebelumnya">‹</button>
+                <span class="pagination-page-indicator" id="checklistPageIndicator">Hal 1 dari 1</span>
+                <button class="btn-pagination-nav" id="checklistNextBtn" onclick="changeChecklistPage(1)" title="Halaman Berikutnya">›</button>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -911,6 +1003,29 @@
               </thead>
               <tbody id="angpaoTableBody"></tbody>
             </table>
+          </div>
+
+          <!-- Pagination Bar: Angpao Table -->
+          <div class="table-pagination-bar" id="paginationAngpao">
+            <div class="pagination-info">
+              Menampilkan <strong id="angpaoInfoRange">0 - 0</strong> dari <strong id="angpaoInfoTotal">0</strong> data
+            </div>
+            <div class="pagination-controls">
+              <div class="pagination-per-page">
+                <span>Tampilkan:</span>
+                <select class="form-control pagination-select" id="angpaoPerPage" onchange="changeAngpaoPerPage(this.value)">
+                  <option value="10" selected>10</option>
+                  <option value="25">25</option>
+                  <option value="50">50</option>
+                  <option value="ALL">Semua</option>
+                </select>
+              </div>
+              <div class="pagination-nav-btns">
+                <button class="btn-pagination-nav" id="angpaoPrevBtn" onclick="changeAngpaoPage(-1)" title="Halaman Sebelumnya">‹</button>
+                <span class="pagination-page-indicator" id="angpaoPageIndicator">Hal 1 dari 1</span>
+                <button class="btn-pagination-nav" id="angpaoNextBtn" onclick="changeAngpaoPage(1)" title="Halaman Berikutnya">›</button>
+              </div>
+            </div>
           </div>
         </div>
       </section>

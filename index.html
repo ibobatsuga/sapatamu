@@ -168,7 +168,7 @@
 
           <div style="margin-bottom:10px;">
             <div style="font-size:0.75rem; font-weight:700; color:#1E40AF; margin-bottom:4px;">
-              🛡️ Akun Admin (Bisa Buka Resepsionis & Planner Studio):
+              🛡️ Akun Admin (Full Akses Sistem & Pengaturan):
             </div>
             <div class="trial-pill-grid">
               <button type="button" class="trial-fill-btn" onclick="quickFillAccount('admin1', 'Admin@Trial1')">admin1</button>
@@ -181,7 +181,7 @@
 
           <div>
             <div style="font-size:0.75rem; font-weight:700; color:#6B21A8; margin-bottom:4px;">
-              👤 Akun User (Hanya Bisa Buka Mode Resepsionis):
+              👤 Akun Resepsionis (Operasional Tamu & Registrasi):
             </div>
             <div class="trial-pill-grid">
               <button type="button" class="trial-fill-btn" onclick="quickFillAccount('user1', 'User@Trial1')">user1</button>
@@ -213,14 +213,13 @@
 
     <ul class="nav-menu">
       <!-- Project Hub Quick Access -->
-      <li class="nav-item" data-tab="projects" style="margin-bottom: 8px;">
+      <li class="nav-item" data-tab="projects" style="margin-bottom: 6px;">
         <button class="nav-btn" data-tab="projects" style="font-weight:600;">
           <span class="nav-icon">📁</span>
           <span>Project</span>
         </button>
       </li>
 
-      <span class="section-tag">Meja Resepsi (Hari H)</span>
       <li class="nav-item active" data-tab="dashboard">
         <button class="nav-btn" data-tab="dashboard">
           <span class="nav-icon">⊞</span>
@@ -231,7 +230,6 @@
         <button class="nav-btn" data-tab="scanner">
           <span class="nav-icon">⚲</span>
           <span>Front Desk</span>
-          <span class="nav-badge" id="navCheckInBadge">Live</span>
         </button>
       </li>
       <li class="nav-item" data-tab="guests">
@@ -240,10 +238,28 @@
           <span>Daftar Tamu</span>
         </button>
       </li>
-      <li class="nav-item nav-reception-only" data-tab="seating">
+      <li class="nav-item" data-tab="seating">
         <button class="nav-btn" data-tab="seating">
           <span class="nav-icon">🪑</span>
           <span>Meja & Kursi</span>
+        </button>
+      </li>
+      <li class="nav-item" data-tab="timeline">
+        <button class="nav-btn" data-tab="timeline">
+          <span class="nav-icon">⏱️</span>
+          <span>Run-Sheet Acara</span>
+        </button>
+      </li>
+      <li class="nav-item" data-tab="vendors">
+        <button class="nav-btn" data-tab="vendors">
+          <span class="nav-icon">📞</span>
+          <span>Kontak Vendor</span>
+        </button>
+      </li>
+      <li class="nav-item" data-tab="checklist">
+        <button class="nav-btn" data-tab="checklist">
+          <span class="nav-icon">☑️</span>
+          <span>Checklist Resepsi</span>
         </button>
       </li>
       <li class="nav-item" data-tab="angpao">
@@ -256,33 +272,6 @@
         <button class="nav-btn" data-tab="settings">
           <span class="nav-icon">⚙️</span>
           <span>Pengaturan</span>
-        </button>
-      </li>
-
-      <!-- Planner Studio Only Items -->
-      <li class="nav-planner-only"><span class="section-tag" style="margin-top:10px;">Planner Studio (WO)</span></li>
-      <li class="nav-item nav-planner-only" data-tab="seating">
-        <button class="nav-btn" data-tab="seating">
-          <span class="nav-icon">🪑</span>
-          <span>Setup Meja & Kursi</span>
-        </button>
-      </li>
-      <li class="nav-item nav-planner-only" data-tab="timeline">
-        <button class="nav-btn" data-tab="timeline">
-          <span class="nav-icon">⏱️</span>
-          <span>Run-Sheet Acara</span>
-        </button>
-      </li>
-      <li class="nav-item nav-planner-only" data-tab="vendors">
-        <button class="nav-btn" data-tab="vendors">
-          <span class="nav-icon">📞</span>
-          <span>Kontak Vendor</span>
-        </button>
-      </li>
-      <li class="nav-item nav-planner-only" data-tab="checklist">
-        <button class="nav-btn" data-tab="checklist">
-          <span class="nav-icon">☑️</span>
-          <span>Checklist Resepsi</span>
         </button>
       </li>
     </ul>
@@ -320,19 +309,8 @@
         </div>
       </div>
 
-      <!-- Right: Mode Control & Settings -->
+      <!-- Right: Settings & User Session -->
       <div class="topbar-right">
-        <!-- Segmented Mode Control -->
-        <div class="segmented-mode-control">
-          <button class="seg-btn active" id="segModeReception" onclick="switchWorkspaceMode('reception')">Resepsionis</button>
-          <button class="seg-btn" id="segModePlanner" onclick="switchWorkspaceMode('planner')">Planner Studio</button>
-        </div>
-
-        <!-- Lock Planner Button (Visible only when in Planner mode) -->
-        <button class="btn btn-outline btn-sm" id="btnLockPlanner" onclick="lockPlannerMode()" title="Kunci sesi Planner Studio dan kembali ke Mode Resepsionis" style="display:none; align-items:center; gap:4px; font-size:0.76rem; padding:5px 9px; border-color:#CBD5E1;">
-          🔒 Kunci
-        </button>
-
         <!-- Quick Settings Shortcut -->
         <button class="burger-btn" onclick="switchTab('settings')" title="Buka Pengaturan (Printer Thermal 58mm, Remote HP, Acara)">
           ⚙️
@@ -462,10 +440,10 @@
               <p>Status kehadiran langsung disinkronkan saat scan QR undangan digital.</p>
             </div>
             <div class="table-actions-group">
-              <button class="btn btn-outline planner-only-action" onclick="triggerCSVImport()" title="Unggah file CSV daftar tamu">
+              <button class="btn btn-outline" onclick="triggerCSVImport()" title="Unggah file CSV daftar tamu">
                 📤 Import CSV
               </button>
-              <button class="btn btn-outline planner-only-action" onclick="exportToUndangankuCSV()" title="Unduh CSV untuk dibagikan ke undanganku.id">
+              <button class="btn btn-outline" onclick="exportToUndangankuCSV()" title="Unduh CSV untuk dibagikan ke undanganku.id">
                 📥 Export CSV
               </button>
               <button class="btn btn-primary" onclick="switchTab('scanner')">
@@ -586,13 +564,13 @@
                 <option value="Sahabat">Sahabat</option>
               </select>
 
-              <button class="btn btn-outline planner-only-action" onclick="triggerCSVImport()" title="Unggah file CSV daftar tamu dari Excel atau undanganku.id">
+              <button class="btn btn-outline" onclick="triggerCSVImport()" title="Unggah file CSV daftar tamu dari Excel atau undanganku.id">
                 📤 Import CSV
               </button>
-              <button class="btn btn-outline planner-only-action" onclick="exportToUndangankuCSV()" title="Unduh CSV untuk dibagikan ke undanganku.id">
+              <button class="btn btn-outline" onclick="exportToUndangankuCSV()" title="Unduh CSV untuk dibagikan ke undanganku.id">
                 📥 Export CSV
               </button>
-              <button class="btn btn-outline planner-only-action" onclick="downloadCSVTemplate()" title="Unduh format template Excel/CSV">
+              <button class="btn btn-outline" onclick="downloadCSVTemplate()" title="Unduh format template Excel/CSV">
                 📄 Template
               </button>
               <button class="btn btn-primary" onclick="openAddGuestModal()">
@@ -656,19 +634,19 @@
       <section class="tab-panel" id="tab-seating">
         <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 20px; flex-wrap:wrap; gap:16px;">
           <div>
-            <h2 style="font-size:1.3rem; font-weight:700;" id="seatingTabTitle">Status Meja & Kapasitas Kursi</h2>
-            <p style="font-size:0.82rem; color:var(--text-muted);" id="seatingTabSubtitle">Monitoring kursi terisi secara realtime saat tamu tiba di venue.</p>
+            <h2 style="font-size:1.3rem; font-weight:700;" id="seatingTabTitle">🪑 Meja & Kursi</h2>
+            <p style="font-size:0.82rem; color:var(--text-muted);" id="seatingTabSubtitle">Tata letak meja, kapasitas kursi ballroom, alokasi tamu, dan monitoring kehadiran realtime.</p>
           </div>
-          <!-- Planner Setup Action Group (Visible only in Planner mode) -->
-          <div id="plannerSeatingActions" style="display:none; gap:10px;">
+          <!-- Action Group -->
+          <div id="plannerSeatingActions" style="display:flex; gap:10px;">
             <button class="btn btn-primary" onclick="openAddTableModal()">
               + Tambah Meja Baru
             </button>
           </div>
         </div>
 
-        <!-- Planner Seating Metrics Overview (Visible only in Planner mode) -->
-        <div id="plannerSeatingStats" style="display:none; grid-template-columns: repeat(4, 1fr); gap:14px; margin-bottom:20px;">
+        <!-- Seating Metrics Overview -->
+        <div id="plannerSeatingStats" style="display:grid; grid-template-columns: repeat(4, 1fr); gap:14px; margin-bottom:20px;">
           <div class="stat-cell" style="padding:14px 18px;">
             <div class="stat-cell-title">Total Meja</div>
             <div class="stat-cell-number" id="statsTotalTables" style="font-size:1.4rem;">0</div>

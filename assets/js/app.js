@@ -525,66 +525,12 @@ function closeGeneralAlertModal() {
 }
 
 function applyWorkspaceModeUI() {
-  const modeBtn = document.getElementById("modeSwitchBtn");
-  const plannerNavItems = document.querySelectorAll(".nav-planner-only");
-  const receptionNavItems = document.querySelectorAll(".nav-reception-only");
   const remotePill = document.getElementById("remotePill");
-  const segReception = document.getElementById("segModeReception");
-  const segPlanner = document.getElementById("segModePlanner");
-  const btnLockPlanner = document.getElementById("btnLockPlanner");
-  const user = window.SapaAuth ? window.SapaAuth.currentUser : null;
+  if (remotePill) remotePill.style.display = "inline-flex";
 
-  // Enforce role restrictions
-  if (user && user.role === "user") {
-    currentMode = "reception";
-    if (segPlanner) {
-      segPlanner.title = "Akses Dibatasi: Akun Resepsionis (User) hanya dapat mengakses Meja Resepsi.";
-      segPlanner.style.opacity = "0.5";
-      segPlanner.style.cursor = "not-allowed";
-    }
-  } else {
-    if (segPlanner) {
-      segPlanner.title = "Beralih ke Planner Studio";
-      segPlanner.style.opacity = "1";
-      segPlanner.style.cursor = "pointer";
-    }
-  }
-
-  if (currentMode === "reception") {
-    if (modeBtn) {
-      modeBtn.innerHTML = "🎯 Mode: <strong>Resepsionis (Hari-H)</strong>";
-      modeBtn.className = "mode-switch-pill reception";
-    }
-    if (segReception) segReception.classList.add("active");
-    if (segPlanner) segPlanner.classList.remove("active");
-
-    if (remotePill) remotePill.style.display = "inline-flex";
-    if (btnLockPlanner) btnLockPlanner.style.display = "none";
-    plannerNavItems.forEach(el => el.style.display = "none");
-    receptionNavItems.forEach(el => el.style.display = "block");
-
-    if (["timeline", "vendors", "checklist"].includes(activeTab)) {
-      switchTab("dashboard");
-    }
-  } else {
-    if (modeBtn) {
-      modeBtn.innerHTML = "📋 Mode: <strong>Planner Studio (WO)</strong>";
-      modeBtn.className = "mode-switch-pill planner";
-    }
-    if (segReception) segReception.classList.remove("active");
-    if (segPlanner) segPlanner.classList.add("active");
-
-    if (remotePill) remotePill.style.display = "none";
-    if (btnLockPlanner) btnLockPlanner.style.display = (user && user.role !== "user") ? "inline-flex" : "none";
-    closeRemoteModal();
-    plannerNavItems.forEach(el => el.style.display = "block");
-    receptionNavItems.forEach(el => el.style.display = "none");
-  }
-
-  // Toggle CSV & Planner-only action buttons
-  const plannerActions = document.querySelectorAll(".planner-only-action");
-  plannerActions.forEach(el => {
-    el.style.display = (currentMode === "planner") ? "inline-flex" : "none";
+  // In unified app, all navigation items and actions are always active
+  document.querySelectorAll(".nav-planner-only, .nav-reception-only, .planner-only-action").forEach(el => {
+    el.style.display = "";
   });
 
   if (window.SapaRemote && SapaRemote.isHost) {
@@ -631,24 +577,8 @@ function updateUserSessionTopBar(user) {
 
 function applyUserRolePermissions(user) {
   if (!user) return;
-  const segPlanner = document.getElementById("segModePlanner");
-
-  if (user.role === "user") {
-    currentMode = "reception";
-    persistState();
-    applyWorkspaceModeUI();
-    if (segPlanner) {
-      segPlanner.title = "Akses Dibatasi: Akun Resepsionis (User) hanya dapat mengakses Meja Resepsi.";
-      segPlanner.style.opacity = "0.5";
-      segPlanner.style.cursor = "not-allowed";
-    }
-  } else {
-    if (segPlanner) {
-      segPlanner.title = "Beralih ke Planner Studio";
-      segPlanner.style.opacity = "1";
-      segPlanner.style.cursor = "pointer";
-    }
-  }
+  // Unified app experience: all menus are unified into 1 seamless app
+  applyWorkspaceModeUI();
 }
 
 function switchAuthTab(tab) {
@@ -1522,54 +1452,47 @@ function changeGuestPage(delta, source = 'dashboard') {
   renderGuestTable();
 }
 
-// 5. Render Seating & Table Occupancy
+// 5. Render Seating & Table Occupancy (Unified View & Setup)
 function renderTableOccupancy() {
   const container = document.getElementById("tableCardsGrid");
   if (!container) return;
 
-  const isPlanner = currentMode === "planner";
-
-  // Dynamic header & action visibility
   const titleEl = document.getElementById("seatingTabTitle");
   const subEl = document.getElementById("seatingTabSubtitle");
   const actionsEl = document.getElementById("plannerSeatingActions");
   const statsEl = document.getElementById("plannerSeatingStats");
 
   if (titleEl) {
-    titleEl.textContent = isPlanner ? "🪑 Setup & Tata Letak Meja Kursi (Planner Studio)" : "Status Meja & Kapasitas Kursi";
+    titleEl.textContent = "🪑 Meja & Kursi";
   }
   if (subEl) {
-    subEl.textContent = isPlanner 
-      ? "Atur tata letak meja, kapasitas kursi, zonasi VIP/Keluarga, serta alokasi tamu undangan."
-      : "Monitoring kursi terisi secara realtime saat tamu tiba di venue.";
+    subEl.textContent = "Tata letak meja, kapasitas kursi ballroom, alokasi tamu, dan monitoring kehadiran realtime.";
   }
   if (actionsEl) {
-    actionsEl.style.display = isPlanner ? "flex" : "none";
+    actionsEl.style.display = "flex";
   }
   if (statsEl) {
-    statsEl.style.display = isPlanner ? "grid" : "none";
-    if (isPlanner) {
-      const totalTables = appTables.length;
-      const totalSeats = appTables.reduce((acc, t) => acc + (t.capacity || 0), 0);
-      const allocatedSeats = appGuests.reduce((acc, g) => {
-        if (g.table) return acc + (g.pax || 1);
-        return acc;
-      }, 0);
-      const availableSeats = Math.max(0, totalSeats - allocatedSeats);
-      const pct = totalSeats > 0 ? Math.round((allocatedSeats / totalSeats) * 100) : 0;
+    statsEl.style.display = "grid";
+    const totalTables = appTables.length;
+    const totalSeats = appTables.reduce((acc, t) => acc + (t.capacity || 0), 0);
+    const allocatedSeats = appGuests.reduce((acc, g) => {
+      if (g.table) return acc + (g.pax || 1);
+      return acc;
+    }, 0);
+    const availableSeats = Math.max(0, totalSeats - allocatedSeats);
+    const pct = totalSeats > 0 ? Math.round((allocatedSeats / totalSeats) * 100) : 0;
 
-      const tEl = document.getElementById("statsTotalTables");
-      const sEl = document.getElementById("statsTotalSeats");
-      const aEl = document.getElementById("statsAllocatedSeats");
-      const apEl = document.getElementById("statsAllocatedPct");
-      const avEl = document.getElementById("statsAvailableSeats");
+    const tEl = document.getElementById("statsTotalTables");
+    const sEl = document.getElementById("statsTotalSeats");
+    const aEl = document.getElementById("statsAllocatedSeats");
+    const apEl = document.getElementById("statsAllocatedPct");
+    const avEl = document.getElementById("statsAvailableSeats");
 
-      if (tEl) tEl.textContent = totalTables;
-      if (sEl) sEl.textContent = totalSeats;
-      if (aEl) aEl.textContent = allocatedSeats;
-      if (apEl) apEl.textContent = `${pct}% Kursi Terisi`;
-      if (avEl) avEl.textContent = availableSeats;
-    }
+    if (tEl) tEl.textContent = totalTables;
+    if (sEl) sEl.textContent = totalSeats;
+    if (aEl) aEl.textContent = allocatedSeats;
+    if (apEl) apEl.textContent = `${pct}% Kursi Terisi`;
+    if (avEl) avEl.textContent = availableSeats;
   }
 
   container.innerHTML = appTables.map(t => {
@@ -1594,22 +1517,17 @@ function renderTableOccupancy() {
               <span style="font-size:0.75rem; color:var(--text-muted); display:inline-block; margin-top:2px;">📍 ${t.zone}</span>
             </div>
             <span class="badge ${isFull ? 'badge-vip' : 'badge-family'}">
-              ${isPlanner ? `${seatedCount}/${t.capacity} Kursi` : `${checkedInCount}/${t.capacity} Hadir`}
+              ${checkedInCount}/${seatedCount} Hadir (${t.capacity} Kursi)
             </span>
           </div>
 
           <div style="background:#F1F5F9; border-radius:6px; height:8px; overflow:hidden; margin-bottom:10px;">
-            <div style="background:${isFull ? '#DC2626' : '#2563EB'}; width:${Math.min(100, ((isPlanner ? seatedCount : checkedInCount) / (t.capacity || 1)) * 100)}%; height:100%; transition:width 0.3s ease;"></div>
+            <div style="background:${isFull ? '#DC2626' : '#2563EB'}; width:${Math.min(100, (seatedCount / (t.capacity || 1)) * 100)}%; height:100%; transition:width 0.3s ease;"></div>
           </div>
 
           <div style="font-size:0.75rem; color:var(--text-muted); display:flex; justify-content:space-between; margin-bottom:12px;">
-            ${isPlanner ? `
-              <span>Teralokasi: <strong>${seatedCount} pax</strong></span>
-              <span>Sisa: <strong>${Math.max(0, t.capacity - seatedCount)} kursi</strong></span>
-            ` : `
-              <span>Hadir di lokasi: <strong>${checkedInCount} pax</strong></span>
-              <span>Belum tiba: <strong>${Math.max(0, seatedCount - checkedInCount)} pax</strong></span>
-            `}
+            <span>Teralokasi: <strong>${seatedCount}/${t.capacity} kursi</strong></span>
+            <span>Hadir: <strong style="color:#16A34A;">${checkedInCount} pax</strong> (Sisa ${Math.max(0, seatedCount - checkedInCount)})</span>
           </div>
 
           <div style="border-top:1px dashed var(--border-light); padding-top:10px; margin-bottom:12px;">
@@ -1619,31 +1537,30 @@ function renderTableOccupancy() {
             <div style="max-height:100px; overflow-y:auto; font-size:0.75rem;">
               ${tableGuests.length ? tableGuests.map(tg => `
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; padding:3px 6px; border-radius:4px; background:#F8FAFC;">
-                  <span style="font-weight:500;">${tg.name} <small style="color:#64748B;">(${tg.pax}p)</small></span>
-                  ${isPlanner ? `
-                    <button class="btn btn-outline btn-sm" style="padding:1px 6px; font-size:0.68rem; color:#DC2626; border-color:#FECACA;" onclick="removeGuestFromTable('${tg.id}')" title="Keluarkan dari meja">✕</button>
-                  ` : `
-                    <span style="color:${tg.isCheckedIn ? '#16A34A' : '#94A3B8'}; font-weight:600; font-size:0.72rem;">${tg.isCheckedIn ? '✓ Hadir' : '○ Menunggu'}</span>
-                  `}
+                  <span style="font-weight:500;">
+                    ${tg.name} <small style="color:#64748B;">(${tg.pax}p)</small>
+                    <span style="font-size:0.68rem; margin-left:4px; color:${tg.isCheckedIn ? '#16A34A' : '#94A3B8'};">
+                      ${tg.isCheckedIn ? '✓' : '○'}
+                    </span>
+                  </span>
+                  <button class="btn btn-outline btn-sm" style="padding:1px 6px; font-size:0.68rem; color:#DC2626; border-color:#FECACA;" onclick="removeGuestFromTable('${tg.id}')" title="Keluarkan dari meja">✕</button>
                 </div>
               `).join('') : '<span style="color:#94A3B8; font-style:italic;">Belum ada tamu dialokasikan.</span>'}
             </div>
           </div>
         </div>
 
-        ${isPlanner ? `
-          <div style="border-top:1px solid var(--border-light); padding-top:12px; margin-top:8px; display:flex; justify-content:space-between; gap:6px;">
-            <button class="btn btn-outline btn-sm" style="flex:1;" onclick="openAssignGuestModal('${t.id}')">
-              + Alokasi Tamu
-            </button>
-            <button class="btn btn-outline btn-sm" onclick="openEditTableModal('${t.id}')" title="Ubah Pengaturan Meja">
-              ✏️
-            </button>
-            <button class="btn btn-outline btn-sm" style="color:#DC2626; border-color:#FECACA;" onclick="deleteTable('${t.id}')" title="Hapus Meja Ini">
-              🗑️
-            </button>
-          </div>
-        ` : ''}
+        <div style="border-top:1px solid var(--border-light); padding-top:12px; margin-top:8px; display:flex; justify-content:space-between; gap:6px;">
+          <button class="btn btn-outline btn-sm" style="flex:1;" onclick="openAssignGuestModal('${t.id}')">
+            + Alokasi Tamu
+          </button>
+          <button class="btn btn-outline btn-sm" onclick="openEditTableModal('${t.id}')" title="Ubah Pengaturan Meja">
+            ✏️
+          </button>
+          <button class="btn btn-outline btn-sm" style="color:#DC2626; border-color:#FECACA;" onclick="deleteTable('${t.id}')" title="Hapus Meja Ini">
+            🗑️
+          </button>
+        </div>
       </div>
     `;
   }).join("");

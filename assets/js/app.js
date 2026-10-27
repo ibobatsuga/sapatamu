@@ -229,13 +229,27 @@ function generateGuestCode() {
   return result;
 }
 
-// UI Notification Toast
+// UI Notification Toast (Floating bottom-right, non-blocking)
 function showToast(title, msg, type = "info") {
+  let container = document.getElementById("toastContainer");
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "toastContainer";
+    container.className = "toast-container";
+    document.body.appendChild(container);
+  }
+
   const toast = document.createElement("div");
   toast.className = `toast-pill ${type}`;
-  toast.innerHTML = `<strong>${title}</strong>: ${msg}`;
-  document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 3500);
+  toast.innerHTML = `<div class="toast-content"><strong>${title}</strong>: <span>${msg}</span></div>`;
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.classList.add("toast-hiding");
+    setTimeout(() => {
+      if (toast.parentNode) toast.remove();
+    }, 250);
+  }, 2500);
 }
 
 // Open Selected Project Event
@@ -738,8 +752,8 @@ function logoutCurrentUser() {
 }
 
 function lockPlannerMode() {
+  // Silent background switch to reception mode without intrusive popup
   switchWorkspaceMode("reception");
-  showToast("Planner Ditutup", "Dialihkan ke Mode Resepsionis.", "info");
 }
 
 function updateSupabaseSettingsUI() {

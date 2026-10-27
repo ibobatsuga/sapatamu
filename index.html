@@ -226,7 +226,7 @@
           <span>Dashboard</span>
         </button>
       </li>
-      <li class="nav-item" data-tab="scanner">
+      <li class="nav-item nav-reception-only" data-tab="scanner">
         <button class="nav-btn" data-tab="scanner">
           <span class="nav-icon">⚲</span>
           <span>Front Desk</span>
@@ -238,25 +238,31 @@
           <span>Daftar Tamu</span>
         </button>
       </li>
-      <li class="nav-item" data-tab="seating">
+      <li class="nav-item nav-reception-only" data-tab="seating">
         <button class="nav-btn" data-tab="seating">
           <span class="nav-icon">🪑</span>
           <span>Meja & Kursi</span>
         </button>
       </li>
-      <li class="nav-item" data-tab="timeline">
+      <li class="nav-item nav-planner-only" data-tab="seating">
+        <button class="nav-btn" data-tab="seating">
+          <span class="nav-icon">🪑</span>
+          <span>Setup Meja & Kursi</span>
+        </button>
+      </li>
+      <li class="nav-item nav-planner-only" data-tab="timeline">
         <button class="nav-btn" data-tab="timeline">
           <span class="nav-icon">⏱️</span>
           <span>Run-Sheet Acara</span>
         </button>
       </li>
-      <li class="nav-item" data-tab="vendors">
+      <li class="nav-item nav-planner-only" data-tab="vendors">
         <button class="nav-btn" data-tab="vendors">
           <span class="nav-icon">📞</span>
           <span>Kontak Vendor</span>
         </button>
       </li>
-      <li class="nav-item" data-tab="checklist">
+      <li class="nav-item nav-planner-only" data-tab="checklist">
         <button class="nav-btn" data-tab="checklist">
           <span class="nav-icon">☑️</span>
           <span>Checklist Resepsi</span>
@@ -309,8 +315,14 @@
         </div>
       </div>
 
-      <!-- Right: Settings & User Session -->
+      <!-- Right: Mode Control, Settings & User Session -->
       <div class="topbar-right">
+        <!-- Segmented Mode Control -->
+        <div class="segmented-mode-control">
+          <button class="seg-btn active" id="segModeReception" onclick="switchWorkspaceMode('reception')">Resepsionis</button>
+          <button class="seg-btn" id="segModePlanner" onclick="switchWorkspaceMode('planner')">Planner Studio</button>
+        </div>
+
         <!-- Quick Settings Shortcut -->
         <button class="burger-btn" onclick="switchTab('settings')" title="Buka Pengaturan (Printer Thermal 58mm, Remote HP, Acara)">
           ⚙️
@@ -440,10 +452,10 @@
               <p>Status kehadiran langsung disinkronkan saat scan QR undangan digital.</p>
             </div>
             <div class="table-actions-group">
-              <button class="btn btn-outline" onclick="triggerCSVImport()" title="Unggah file CSV daftar tamu">
+              <button class="btn btn-outline planner-only-action" onclick="triggerCSVImport()" title="Unggah file CSV daftar tamu">
                 📤 Import CSV
               </button>
-              <button class="btn btn-outline" onclick="exportToUndangankuCSV()" title="Unduh CSV untuk dibagikan ke undanganku.id">
+              <button class="btn btn-outline planner-only-action" onclick="exportToUndangankuCSV()" title="Unduh CSV untuk dibagikan ke undanganku.id">
                 📥 Export CSV
               </button>
               <button class="btn btn-primary" onclick="switchTab('scanner')">
@@ -564,13 +576,13 @@
                 <option value="Sahabat">Sahabat</option>
               </select>
 
-              <button class="btn btn-outline" onclick="triggerCSVImport()" title="Unggah file CSV daftar tamu dari Excel atau undanganku.id">
+              <button class="btn btn-outline planner-only-action" onclick="triggerCSVImport()" title="Unggah file CSV daftar tamu dari Excel atau undanganku.id">
                 📤 Import CSV
               </button>
-              <button class="btn btn-outline" onclick="exportToUndangankuCSV()" title="Unduh CSV untuk dibagikan ke undanganku.id">
+              <button class="btn btn-outline planner-only-action" onclick="exportToUndangankuCSV()" title="Unduh CSV untuk dibagikan ke undanganku.id">
                 📥 Export CSV
               </button>
-              <button class="btn btn-outline" onclick="downloadCSVTemplate()" title="Unduh format template Excel/CSV">
+              <button class="btn btn-outline planner-only-action" onclick="downloadCSVTemplate()" title="Unduh format template Excel/CSV">
                 📄 Template
               </button>
               <button class="btn btn-primary" onclick="openAddGuestModal()">
@@ -762,63 +774,6 @@
               <div class="form-group">
                 <label>Total Stok Souvenir Fisik</label>
                 <input type="number" class="form-control" id="settingsSouvenirTotal" value="300" onchange="updateEventMetaFromSettings()">
-              </div>
-            </div>
-          </div>
-
-          <!-- Card 4: Cadangan & Reset Data -->
-          <div class="settings-card">
-            <div class="settings-card-header">
-              <div>
-                <h3 style="font-size:1.05rem; font-weight:700;">💾 Cadangan Data & Reset</h3>
-                <p style="font-size:0.8rem; color:var(--text-muted);">Simpan backup JSON atau kembalikan ke data awal demo</p>
-              </div>
-            </div>
-
-            <div class="settings-card-body">
-              <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:16px;">
-                Data disimpan secara lokal di browser ini. Anda dapat mengunduh backup lengkap untuk dipindahkan ke laptop lain.
-              </p>
-              <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                <button class="btn btn-outline btn-sm" onclick="downloadJSONBackup()">
-                  📥 Unduh Backup JSON
-                </button>
-                <button class="btn btn-outline btn-sm" style="color:#DC2626; border-color:#FECACA;" onclick="resetDemoData()">
-                  ⚠️ Reset Data Demo
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Card 5: Integrasi Supabase Cloud Auth & Database -->
-          <div class="settings-card">
-            <div class="settings-card-header">
-              <div>
-                <h3 style="font-size:1.05rem; font-weight:700;">⚡ Integrasi Supabase Cloud Auth</h3>
-                <p style="font-size:0.8rem; color:var(--text-muted);">Koneksikan proyek Supabase untuk autentikasi online & cloud database</p>
-              </div>
-              <span class="badge badge-family" id="settingsSupabaseBadge">Mode Lokal / Trial</span>
-            </div>
-
-            <div class="settings-card-body">
-              <div class="form-group">
-                <label>Supabase Project URL</label>
-                <input type="text" class="form-control" id="settingsSupabaseUrl" placeholder="https://your-project.supabase.co">
-              </div>
-              <div class="form-group">
-                <label>Supabase Anon Public Key</label>
-                <input type="password" class="form-control" id="settingsSupabaseKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
-              </div>
-              <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:14px;">
-                Jika dikosongkan, sistem berjalan offline menggunakan akun trial bawaan (superadmin, admin 1-5, user 1-5).
-              </p>
-              <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                <button class="btn btn-primary btn-sm" onclick="saveSupabaseSettings()">
-                  ⚡ Simpan & Sambungkan
-                </button>
-                <button class="btn btn-outline btn-sm" onclick="testSupabaseConnection()">
-                  🔍 Uji Koneksi
-                </button>
               </div>
             </div>
           </div>

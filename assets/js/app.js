@@ -525,13 +525,55 @@ function closeGeneralAlertModal() {
 }
 
 function applyWorkspaceModeUI() {
+  const segReception = document.getElementById("segModeReception");
+  const segPlanner = document.getElementById("segModePlanner");
   const remotePill = document.getElementById("remotePill");
-  if (remotePill) remotePill.style.display = "inline-flex";
+  const user = window.SapaAuth ? window.SapaAuth.currentUser : null;
 
-  // In unified app, all navigation items and actions are always active
-  document.querySelectorAll(".nav-planner-only, .nav-reception-only, .planner-only-action").forEach(el => {
-    el.style.display = "";
-  });
+  // Enforce role restrictions: trial 'user' role can only access Reception mode
+  if (user && user.role === "user") {
+    currentMode = "reception";
+    if (segPlanner) {
+      segPlanner.title = "Akses Dibatasi: Akun Resepsionis (User) hanya dapat mengakses Meja Resepsi.";
+      segPlanner.style.opacity = "0.55";
+      segPlanner.style.cursor = "not-allowed";
+    }
+  } else {
+    if (segPlanner) {
+      segPlanner.title = "Beralih ke Planner Studio";
+      segPlanner.style.opacity = "1";
+      segPlanner.style.cursor = "pointer";
+    }
+  }
+
+  const plannerNavItems = document.querySelectorAll(".nav-planner-only");
+  const receptionNavItems = document.querySelectorAll(".nav-reception-only");
+  const plannerActionButtons = document.querySelectorAll(".planner-only-action");
+
+  if (currentMode === "reception") {
+    if (segReception) segReception.classList.add("active");
+    if (segPlanner) segPlanner.classList.remove("active");
+
+    if (remotePill) remotePill.style.display = "inline-flex";
+    plannerNavItems.forEach(el => el.style.display = "none");
+    receptionNavItems.forEach(el => el.style.display = "block");
+    plannerActionButtons.forEach(el => el.style.display = "none");
+
+    // If currently on a planner-only tab, switch back to dashboard
+    if (activeTab === "timeline" || activeTab === "vendors" || activeTab === "checklist") {
+      switchTab("dashboard");
+    }
+  } else {
+    // Planner mode
+    if (segReception) segReception.classList.remove("active");
+    if (segPlanner) segPlanner.classList.add("active");
+
+    if (remotePill) remotePill.style.display = "none";
+    closeRemoteModal();
+    plannerNavItems.forEach(el => el.style.display = "block");
+    receptionNavItems.forEach(el => el.style.display = "none");
+    plannerActionButtons.forEach(el => el.style.display = "inline-flex");
+  }
 
   if (window.SapaRemote && SapaRemote.isHost) {
     SapaRemote.broadcastHostState();
@@ -577,7 +619,10 @@ function updateUserSessionTopBar(user) {
 
 function applyUserRolePermissions(user) {
   if (!user) return;
-  // Unified app experience: all menus are unified into 1 seamless app
+  if (user.role === "user" && currentMode === "planner") {
+    currentMode = "reception";
+    persistState();
+  }
   applyWorkspaceModeUI();
 }
 
@@ -1457,22 +1502,25 @@ function renderTableOccupancy() {
   const container = document.getElementById("tableCardsGrid");
   if (!container) return;
 
+  const isPlanner = currentMode === "planner";
   const titleEl = document.getElementById("seatingTabTitle");
   const subEl = document.getElementById("seatingTabSubtitle");
   const actionsEl = document.getElementById("plannerSeatingActions");
   const statsEl = document.getElementById("plannerSeatingStats");
 
   if (titleEl) {
-    titleEl.textContent = "🪑 Meja & Kursi";
+    titleEl.textContent = isPlanner ? "🪑 Setup Meja & Kursi (WO)" : "🪑 Meja & Kursi";
   }
   if (subEl) {
-    subEl.textContent = "Tata letak meja, kapasitas kursi ballroom, alokasi tamu, dan monitoring kehadiran realtime.";
+    subEl.textContent = isPlanner
+      ? "Tata letak meja, kapasitas kursi ballroom, alokasi tamu, dan penataan sebelum hari H."
+      : "Monitoring kapasitas meja ballroom, keterisian kursi, dan kehadiran tamu secara realtime.";
   }
   if (actionsEl) {
-    actionsEl.style.display = "flex";
+    actionsEl.style.display = isPlanner ? "flex" : "none";
   }
   if (statsEl) {
-    statsEl.style.display = "grid";
+    statsEl.style.display = isPlanner ? "grid" : "none";
     const totalTables = appTables.length;
     const totalSeats = appTables.reduce((acc, t) => acc + (t.capacity || 0), 0);
     const allocatedSeats = appGuests.reduce((acc, g) => {
@@ -1543,13 +1591,14 @@ function renderTableOccupancy() {
                       ${tg.isCheckedIn ? '✓' : '○'}
                     </span>
                   </span>
-                  <button class="btn btn-outline btn-sm" style="padding:1px 6px; font-size:0.68rem; color:#DC2626; border-color:#FECACA;" onclick="removeGuestFromTable('${tg.id}')" title="Keluarkan dari meja">✕</button>
+                  ${isPlanner ? `<button class="btn btn-outline btn-sm" style="padding:1px 6px; font-size:0.68rem; color:#DC2626; border-color:#FECACA;" onclick="removeGuestFromTable('${tg.id}')" title="Keluarkan dari meja">✕</button>` : ''}
                 </div>
               `).join('') : '<span style="color:#94A3B8; font-style:italic;">Belum ada tamu dialokasikan.</span>'}
             </div>
           </div>
         </div>
 
+        ${isPlanner ? `
         <div style="border-top:1px solid var(--border-light); padding-top:12px; margin-top:8px; display:flex; justify-content:space-between; gap:6px;">
           <button class="btn btn-outline btn-sm" style="flex:1;" onclick="openAssignGuestModal('${t.id}')">
             + Alokasi Tamu
@@ -1560,7 +1609,7 @@ function renderTableOccupancy() {
           <button class="btn btn-outline btn-sm" style="color:#DC2626; border-color:#FECACA;" onclick="deleteTable('${t.id}')" title="Hapus Meja Ini">
             🗑️
           </button>
-        </div>
+        </div>` : ''}
       </div>
     `;
   }).join("");

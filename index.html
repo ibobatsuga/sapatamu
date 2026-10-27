@@ -1386,6 +1386,62 @@
   </div>
 </div>
 
+<!-- 14. Access Restricted / Role Barrier Modal (Proper Pop-up Dialog) -->
+<div class="modal-overlay" id="accessRestrictedModal">
+  <div class="modal-window" style="max-width: 440px; text-align: center; border-radius: 18px; padding: 4px;">
+    <div style="padding: 28px 24px 20px 24px;">
+      <div style="width: 58px; height: 58px; background: #FEF3C7; color: #D97706; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin: 0 auto 16px auto; box-shadow: 0 4px 12px rgba(217, 119, 6, 0.15);">
+        🛡️
+      </div>
+      <h3 style="font-size: 1.25rem; font-weight: 800; color: #0F172A; margin-bottom: 8px;">
+        Akses Planner Studio Dibatasi
+      </h3>
+      <p style="font-size: 0.88rem; color: #64748B; line-height: 1.5; margin-bottom: 18px;">
+        Akun aktif saat ini (<strong id="restrictedUsernameDisplay" style="color: #0F172A;">user</strong>) berstatus <span class="user-role-badge user" style="font-size:0.75rem;">Resepsionis</span> yang hanya memiliki akses operasional Meja Resepsi (Hari-H).
+      </p>
+
+      <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 12px 14px; text-align: left; font-size: 0.82rem; color: #475569; margin-bottom: 20px;">
+        <div style="display:flex; align-items:flex-start; gap:8px;">
+          <span style="font-size:1rem; line-height:1;">💡</span>
+          <div>
+            <strong>Butuh membuka Planner Studio?</strong><br>
+            Fitur pengaturan denah meja, rundown WO, kontak vendor, dan checklist persiapan hanya dapat diakses oleh akun <strong>Admin WO</strong> atau <strong>Superadmin</strong>.
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <button class="btn btn-primary" onclick="switchAccountToAdmin()" style="width: 100%; justify-content: center; padding: 11px;">
+          🔑 Ganti Akun ke Admin WO
+        </button>
+        <button class="btn btn-outline" onclick="closeAccessRestrictedModal()" style="width: 100%; justify-content: center; padding: 10px;">
+          Tetap di Mode Resepsionis
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 15. General Sleek Pop-up Dialog Modal -->
+<div class="modal-overlay" id="generalAlertModal">
+  <div class="modal-window" style="max-width: 420px; text-align: center; border-radius: 18px; padding: 4px;">
+    <div style="padding: 26px 24px 20px 24px;">
+      <div id="generalAlertIcon" style="width: 54px; height: 54px; background: #DBEAFE; color: #2563EB; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; margin: 0 auto 14px auto;">
+        ℹ️
+      </div>
+      <h3 id="generalAlertTitle" style="font-size: 1.2rem; font-weight: 800; color: #0F172A; margin-bottom: 8px;">
+        Pemberitahuan
+      </h3>
+      <p id="generalAlertMessage" style="font-size: 0.86rem; color: #64748B; line-height: 1.5; margin-bottom: 20px;">
+        Pesan sistem
+      </p>
+      <button class="btn btn-primary" id="generalAlertBtn" onclick="closeGeneralAlertModal()" style="width: 100%; justify-content: center; padding: 10px;">
+        Mengerti
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- Floating Toast Container -->
 <div id="toastContainer" class="toast-container" aria-live="polite"></div>
 

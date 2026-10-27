@@ -472,7 +472,7 @@ function switchWorkspaceMode(mode) {
       return;
     }
     if (user.role === "user") {
-      showToast("Akses Dibatasi", "Akun Resepsionis (User) hanya dapat membuka Mode Resepsionis. Silakan masuk sebagai Admin atau Superadmin untuk mengakses Planner Studio.", "warning");
+      openAccessRestrictedModal(user);
       return;
     }
   }
@@ -480,6 +480,48 @@ function switchWorkspaceMode(mode) {
   currentMode = mode;
   persistState();
   applyWorkspaceModeUI();
+}
+
+function openAccessRestrictedModal(user) {
+  const modal = document.getElementById("accessRestrictedModal");
+  const usernameDisplay = document.getElementById("restrictedUsernameDisplay");
+  if (usernameDisplay) {
+    usernameDisplay.textContent = user ? (user.username || user.fullName) : "user";
+  }
+  if (modal) modal.classList.add("active");
+}
+
+function closeAccessRestrictedModal() {
+  const modal = document.getElementById("accessRestrictedModal");
+  if (modal) modal.classList.remove("active");
+}
+
+function switchAccountToAdmin() {
+  closeAccessRestrictedModal();
+  if (window.SapaAuth) {
+    window.SapaAuth.signOut();
+  }
+  initAuthUI();
+}
+
+function showSystemAlertModal(title, message, icon = "ℹ️", btnText = "Mengerti") {
+  const modal = document.getElementById("generalAlertModal");
+  const titleEl = document.getElementById("generalAlertTitle");
+  const msgEl = document.getElementById("generalAlertMessage");
+  const iconEl = document.getElementById("generalAlertIcon");
+  const btnEl = document.getElementById("generalAlertBtn");
+
+  if (titleEl) titleEl.textContent = title;
+  if (msgEl) msgEl.textContent = message;
+  if (iconEl) iconEl.textContent = icon;
+  if (btnEl) btnEl.textContent = btnText;
+
+  if (modal) modal.classList.add("active");
+}
+
+function closeGeneralAlertModal() {
+  const modal = document.getElementById("generalAlertModal");
+  if (modal) modal.classList.remove("active");
 }
 
 function applyWorkspaceModeUI() {

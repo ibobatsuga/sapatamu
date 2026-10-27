@@ -13,7 +13,195 @@
 </head>
 <body>
 
-<div class="app-container">
+<!-- ================= AUTH GATEWAY SCREEN (SIGN IN / SIGN UP) ================= -->
+<div id="authGatewayScreen" class="auth-gateway-overlay" style="display:none;">
+  <div class="auth-card-wrapper">
+    <!-- Left: Branding & Value Proposition -->
+    <div class="auth-brand-side">
+      <div>
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:28px;">
+          <div class="brand-icon" style="width:38px; height:38px; font-size:1.15rem; background:#2563EB;">❖</div>
+          <div>
+            <h1 style="font-size:1.4rem; font-weight:800; letter-spacing:-0.5px; color:#FFFFFF; line-height:1.1;">SapaTamu</h1>
+            <span style="font-size:0.75rem; color:#94A3B8; text-transform:uppercase; letter-spacing:1px; font-weight:600;">Smart Wedding Reception OS</span>
+          </div>
+        </div>
+
+        <h2 style="font-size:1.5rem; font-weight:700; color:#F8FAFC; line-height:1.3; margin-bottom:14px;">
+          Sistem Resepsi & Planner Pernikahan Modern
+        </h2>
+        <p style="font-size:0.86rem; color:#94A3B8; line-height:1.55; margin-bottom:28px;">
+          Platform all-in-one untuk registrasi tamu via QR Code, cetak struk Bluetooth Thermal 58mm, tata letak meja realtime, dan master rundown WO.
+        </p>
+
+        <div class="auth-feature-list">
+          <div class="auth-feature-item">
+            <span class="auth-feature-icon">⚡</span>
+            <div>
+              <strong>Check-in Cepat & Auto-Print Struk</strong>
+              <p>Scan barcode undangan digital undanganku.id dan cetak pass meja instan.</p>
+            </div>
+          </div>
+          <div class="auth-feature-item">
+            <span class="auth-feature-icon">🪑</span>
+            <div>
+              <strong>Sinkronisasi Kursi & Kuota Souvenir</strong>
+              <p>Monitoring kapasitas kursi terisi dan log souvenir langsung saat tamu tiba.</p>
+            </div>
+          </div>
+          <div class="auth-feature-item">
+            <span class="auth-feature-icon">📱</span>
+            <div>
+              <strong>Remote Scanner Smartphone (P2P)</strong>
+              <p>Gunakan kamera HP iPhone/Android sebagai scanner wireless tanpa install aplikasi.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="border-top:1px solid rgba(255,255,255,0.1); padding-top:18px; margin-top:20px; font-size:0.75rem; color:#64748B;">
+        <span>🔒 Didukung Autentikasi Supabase & Enkripsi Sesi</span>
+      </div>
+    </div>
+
+    <!-- Right: Authentication Form -->
+    <div class="auth-form-side">
+      <!-- Tabs: Sign In / Sign Up -->
+      <div class="auth-tabs">
+        <button type="button" class="auth-tab-btn active" id="btnTabSignIn" onclick="switchAuthTab('signin')">
+          Masuk Akun
+        </button>
+        <button type="button" class="auth-tab-btn" id="btnTabSignUp" onclick="switchAuthTab('signup')">
+          Daftar Akun Baru
+        </button>
+      </div>
+
+      <!-- Google Sign In Button -->
+      <button type="button" class="btn-google-auth" onclick="handleGoogleSignIn()">
+        <svg width="18" height="18" viewBox="0 0 18 18">
+          <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.616z"/>
+          <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/>
+          <path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.347 6.175 0 7.55 0 9s.347 2.825.957 4.039l3.007-2.332z"/>
+          <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"/>
+        </svg>
+        <span>Masuk dengan Google</span>
+      </button>
+
+      <div class="auth-divider">
+        <span>atau dengan username / email</span>
+      </div>
+
+      <!-- Alert Message Box -->
+      <div id="authAlertBox" style="display:none;" class="auth-alert"></div>
+
+      <!-- Form 1: Sign In -->
+      <form id="signInForm" onsubmit="handleFormSignIn(event)">
+        <div class="form-group" style="margin-bottom:14px;">
+          <label style="font-size:0.82rem; font-weight:600; color:var(--text-main);">Username atau Email</label>
+          <input type="text" class="form-control" id="signInUsername" placeholder="Contoh: admin1 atau user1" required autocomplete="username">
+        </div>
+
+        <div class="form-group" style="margin-bottom:14px;">
+          <label style="font-size:0.82rem; font-weight:600; color:var(--text-main);">Password</label>
+          <div style="position:relative;">
+            <input type="password" class="form-control" id="signInPassword" placeholder="Masukkan password" required autocomplete="current-password" style="padding-right:40px;">
+            <button type="button" onclick="toggleSignInPasswordVisibility()" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:1rem; color:#94A3B8; padding:0;" title="Lihat password">
+              👁️
+            </button>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
+          <label style="display:flex; align-items:center; gap:8px; font-size:0.82rem; color:var(--text-muted); cursor:pointer;">
+            <input type="checkbox" id="signInRemember" checked>
+            <span>Ingat saya di perangkat ini</span>
+          </label>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width:100%; padding:11px; font-size:0.92rem; justify-content:center;" id="btnSubmitSignIn">
+          Masuk ke Sistem ➔
+        </button>
+      </form>
+
+      <!-- Form 2: Sign Up (Hidden by default) -->
+      <form id="signUpForm" style="display:none;" onsubmit="handleFormSignUp(event)">
+        <div class="form-group" style="margin-bottom:12px;">
+          <label style="font-size:0.82rem; font-weight:600; color:var(--text-main);">Nama Lengkap</label>
+          <input type="text" class="form-control" id="signUpFullName" placeholder="Contoh: Rian Pratama (WO)" required>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px;">
+          <div class="form-group">
+            <label style="font-size:0.82rem; font-weight:600; color:var(--text-main);">Username</label>
+            <input type="text" class="form-control" id="signUpUsername" placeholder="Username unik" required autocomplete="username">
+          </div>
+          <div class="form-group">
+            <label style="font-size:0.82rem; font-weight:600; color:var(--text-main);">Peran (Role)</label>
+            <select class="form-control" id="signUpRole">
+              <option value="user">👤 Resepsionis (User)</option>
+              <option value="admin">🛡️ Planner WO (Admin)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom:12px;">
+          <label style="font-size:0.82rem; font-weight:600; color:var(--text-main);">Alamat Email</label>
+          <input type="email" class="form-control" id="signUpEmail" placeholder="nama@email.com" required autocomplete="email">
+        </div>
+
+        <div class="form-group" style="margin-bottom:16px;">
+          <label style="font-size:0.82rem; font-weight:600; color:var(--text-main);">Password</label>
+          <input type="password" class="form-control" id="signUpPassword" placeholder="Minimum 6 karakter" required autocomplete="new-password">
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width:100%; padding:11px; font-size:0.92rem; justify-content:center;" id="btnSubmitSignUp">
+          Daftar Akun Baru ➔
+        </button>
+      </form>
+
+      <!-- Quick Demo / Trial Helper (WITHOUT Superadmin credentials) -->
+      <div class="auth-demo-helper">
+        <div class="auth-demo-header" onclick="toggleDemoCredentialsDrawer()">
+          <span>🔑 Akun Uji Coba / Trial (Klik untuk Isi Otomatis)</span>
+          <span id="demoDrawerArrow">▾</span>
+        </div>
+        <div id="demoCredentialsBody" class="auth-demo-body" style="display:none;">
+          <div style="font-size:0.73rem; color:#64748B; margin-bottom:8px;">
+            Pilih akun uji coba di bawah untuk mencoba hak akses sistem:
+          </div>
+
+          <div style="margin-bottom:10px;">
+            <div style="font-size:0.75rem; font-weight:700; color:#1E40AF; margin-bottom:4px;">
+              🛡️ Akun Admin (Bisa Buka Resepsionis & Planner Studio):
+            </div>
+            <div class="trial-pill-grid">
+              <button type="button" class="trial-fill-btn" onclick="quickFillAccount('admin1', 'Admin@Trial1')">admin1</button>
+              <button type="button" class="trial-fill-btn" onclick="quickFillAccount('admin2', 'Admin@Trial2')">admin2</button>
+              <button type="button" class="trial-fill-btn" onclick="quickFillAccount('admin3', 'Admin@Trial3')">admin3</button>
+              <button type="button" class="trial-fill-btn" onclick="quickFillAccount('admin4', 'Admin@Trial4')">admin4</button>
+              <button type="button" class="trial-fill-btn" onclick="quickFillAccount('admin5', 'Admin@Trial5')">admin5</button>
+            </div>
+          </div>
+
+          <div>
+            <div style="font-size:0.75rem; font-weight:700; color:#6B21A8; margin-bottom:4px;">
+              👤 Akun User (Hanya Bisa Buka Mode Resepsionis):
+            </div>
+            <div class="trial-pill-grid">
+              <button type="button" class="trial-fill-btn" onclick="quickFillAccount('user1', 'User@Trial1')">user1</button>
+              <button type="button" class="trial-fill-btn" onclick="quickFillAccount('user2', 'User@Trial2')">user2</button>
+              <button type="button" class="trial-fill-btn" onclick="quickFillAccount('user3', 'User@Trial3')">user3</button>
+              <button type="button" class="trial-fill-btn" onclick="quickFillAccount('user4', 'User@Trial4')">user4</button>
+              <button type="button" class="trial-fill-btn" onclick="quickFillAccount('user5', 'User@Trial5')">user5</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="app-container" id="appRoot">
   <!-- Mobile Backdrop for Sidebar -->
   <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleSidebar()"></div>
 
@@ -144,10 +332,22 @@
           <button class="seg-btn" id="segModePlanner" onclick="switchWorkspaceMode('planner')">Planner Studio</button>
         </div>
 
+        <!-- Lock Planner Button (Visible only when in Planner mode) -->
+        <button class="btn btn-outline btn-sm" id="btnLockPlanner" onclick="lockPlannerMode()" title="Kunci sesi Planner Studio dan kembali ke Mode Resepsionis" style="display:none; align-items:center; gap:4px; font-size:0.76rem; padding:5px 9px; border-color:#CBD5E1;">
+          🔒 Kunci
+        </button>
+
         <!-- Quick Settings Shortcut -->
         <button class="burger-btn" onclick="switchTab('settings')" title="Buka Pengaturan (Printer Thermal 58mm, Remote HP, Acara)">
           ⚙️
         </button>
+
+        <!-- Active User Profile Pill & Logout -->
+        <div class="user-session-pill" id="userSessionPill">
+          <span class="user-role-badge admin" id="topbarUserRoleBadge">Admin</span>
+          <span class="user-session-name" id="topbarUserName">admin1</span>
+          <button class="btn-user-logout" onclick="logoutCurrentUser()" title="Keluar / Logout Akun">🚪</button>
+        </div>
       </div>
     </header>
 
@@ -565,6 +765,39 @@
                 </button>
                 <button class="btn btn-outline btn-sm" style="color:#DC2626; border-color:#FECACA;" onclick="resetDemoData()">
                   ⚠️ Reset Data Demo
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 5: Integrasi Supabase Cloud Auth & Database -->
+          <div class="settings-card">
+            <div class="settings-card-header">
+              <div>
+                <h3 style="font-size:1.05rem; font-weight:700;">⚡ Integrasi Supabase Cloud Auth</h3>
+                <p style="font-size:0.8rem; color:var(--text-muted);">Koneksikan proyek Supabase untuk autentikasi online & cloud database</p>
+              </div>
+              <span class="badge badge-family" id="settingsSupabaseBadge">Mode Lokal / Trial</span>
+            </div>
+
+            <div class="settings-card-body">
+              <div class="form-group">
+                <label>Supabase Project URL</label>
+                <input type="text" class="form-control" id="settingsSupabaseUrl" placeholder="https://your-project.supabase.co">
+              </div>
+              <div class="form-group">
+                <label>Supabase Anon Public Key</label>
+                <input type="password" class="form-control" id="settingsSupabaseKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+              </div>
+              <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:14px;">
+                Jika dikosongkan, sistem berjalan offline menggunakan akun trial bawaan (superadmin, admin 1-5, user 1-5).
+              </p>
+              <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <button class="btn btn-primary btn-sm" onclick="saveSupabaseSettings()">
+                  ⚡ Simpan & Sambungkan
+                </button>
+                <button class="btn btn-outline btn-sm" onclick="testSupabaseConnection()">
+                  🔍 Uji Koneksi
                 </button>
               </div>
             </div>
@@ -1106,7 +1339,60 @@
   </div>
 </div>
 
+<!-- 13. Planner Auth / Login Modal -->
+<div class="modal-overlay" id="plannerAuthModal">
+  <div class="modal-window" style="max-width: 390px;">
+    <div class="modal-header">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="font-size:1.2rem;">🔒</span>
+        <h3 style="font-size:1.1rem; font-weight:700;">Akses Planner Studio (WO)</h3>
+      </div>
+      <button class="modal-close" onclick="closePlannerAuthModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:0.83rem; color:var(--text-muted); margin-bottom:14px; line-height:1.45;">
+        Masukkan username dan password Wedding Organizer untuk mengakses fitur penataan meja, susunan acara (rundown), dan kontak vendor.
+      </p>
+
+      <div id="plannerAuthError" style="display:none; color:#DC2626; font-size:0.8rem; background:#FEF2F2; padding:10px 12px; border-radius:8px; border:1px solid #FECACA; margin-bottom:12px;"></div>
+
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" class="form-control" id="plannerAuthUser" placeholder="Masukkan username" autocomplete="username" onkeydown="if(event.key==='Enter') document.getElementById('plannerAuthPass').focus()">
+      </div>
+
+      <div class="form-group">
+        <label>Password</label>
+        <div style="position:relative;">
+          <input type="password" class="form-control" id="plannerAuthPass" placeholder="Masukkan password" autocomplete="current-password" onkeydown="if(event.key==='Enter') submitPlannerAuth()" style="padding-right:40px;">
+          <button type="button" onclick="togglePlannerPasswordVisibility()" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:1rem; color:#94A3B8; padding:0;" title="Tampilkan/Sembunyikan Password">
+            👁️
+          </button>
+        </div>
+      </div>
+
+      <div style="margin: 12px 0 16px 0;">
+        <label style="display:flex; align-items:center; gap:8px; font-size:0.82rem; color:var(--text-muted); cursor:pointer;">
+          <input type="checkbox" id="plannerAuthRemember" checked>
+          <span>Ingat sesi Planner di browser ini</span>
+        </label>
+      </div>
+
+      <div style="font-size:0.75rem; color:#64748B; background:#F8FAFC; border:1px solid var(--border-light); padding:10px 12px; border-radius:8px;">
+        🛡️ <strong>Akses Terbatas:</strong><br>
+        Hanya akun dengan peran <strong style="color:var(--primary);">Admin</strong> atau <strong style="color:var(--primary);">Superadmin</strong> yang memiliki izin mengakses Planner Studio.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closePlannerAuthModal()">Batal</button>
+      <button class="btn btn-primary" onclick="submitPlannerAuth()">Masuk Planner Studio ➔</button>
+    </div>
+  </div>
+</div>
+
 <!-- Core Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/supabase.js"></script>
 <script src="assets/js/sound.js"></script>
 <script src="assets/js/printer.js"></script>
 <script src="assets/js/remote.js"></script>

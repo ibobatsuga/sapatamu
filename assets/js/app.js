@@ -7,6 +7,22 @@
 const STORAGE_PROJECTS = "vow_projects_data_v1";
 const STORAGE_ACTIVE_PROJECT_ID = "vow_active_project_id_v1";
 const STORAGE_MODE = "vow_workspace_mode_v1";
+const STORAGE_PLANNER_AUTH = "vow_planner_auth_v1";
+const STORAGE_PLANNER_SESSION = "vow_planner_session_v1";
+const STORAGE_PLANNER_REMEMBER = "vow_planner_remember_v1";
+
+// Planner Authentication Credentials (Configurable in Settings)
+let plannerCredentials = (() => {
+  try {
+    const saved = localStorage.getItem(STORAGE_PLANNER_AUTH);
+    return saved ? JSON.parse(saved) : { username: "admin", password: "admin" };
+  } catch (e) {
+    return { username: "admin", password: "admin" };
+  }
+})();
+
+let isPlannerAuthenticated = sessionStorage.getItem(STORAGE_PLANNER_SESSION) === "true" ||
+                             localStorage.getItem(STORAGE_PLANNER_REMEMBER) === "true";
 
 // Default Seed Templates for Projects
 const defaultSeedProjects = [
@@ -170,6 +186,10 @@ let appVendors = activeProject.vendors;
 let appChecklist = activeProject.checklist;
 let appAngpao = activeProject.angpao;
 let currentMode = localStorage.getItem(STORAGE_MODE) || "reception"; // 'reception' or 'planner'
+if (currentMode === "planner" && !isPlannerAuthenticated) {
+  currentMode = "reception";
+  localStorage.setItem(STORAGE_MODE, "reception");
+}
 
 let activeTab = "dashboard";
 let html5QrScanner = null;
@@ -428,8 +448,21 @@ function updateEventMetaFromSettings() {
 }
 
 // Mode Switcher: Reception (Hari-H) vs Planner (Persiapan)
-// Silent mode switch without toast banner
+// Role-based authorization: Only Admin & Superadmin can access Planner Studio
 function switchWorkspaceMode(mode) {
+  const user = window.SapaAuth ? window.SapaAuth.currentUser : null;
+  
+  if (mode === "planner") {
+    if (!user) {
+      initAuthUI();
+      return;
+    }
+    if (user.role === "user") {
+      showToast("Akses Dibatasi", "Akun Resepsionis (User) hanya dapat membuka Mode Resepsionis. Silakan masuk sebagai Admin atau Superadmin untuk mengakses Planner Studio.", "warning");
+      return;
+    }
+  }
+
   currentMode = mode;
   persistState();
   applyWorkspaceModeUI();
@@ -442,6 +475,24 @@ function applyWorkspaceModeUI() {
   const remotePill = document.getElementById("remotePill");
   const segReception = document.getElementById("segModeReception");
   const segPlanner = document.getElementById("segModePlanner");
+  const btnLockPlanner = document.getElementById("btnLockPlanner");
+  const user = window.SapaAuth ? window.SapaAuth.currentUser : null;
+
+  // Enforce role restrictions
+  if (user && user.role === "user") {
+    currentMode = "reception";
+    if (segPlanner) {
+      segPlanner.title = "Akses Dibatasi: Akun Resepsionis (User) hanya dapat mengakses Meja Resepsi.";
+      segPlanner.style.opacity = "0.5";
+      segPlanner.style.cursor = "not-allowed";
+    }
+  } else {
+    if (segPlanner) {
+      segPlanner.title = "Beralih ke Planner Studio";
+      segPlanner.style.opacity = "1";
+      segPlanner.style.cursor = "pointer";
+    }
+  }
 
   if (currentMode === "reception") {
     if (modeBtn) {
@@ -452,6 +503,7 @@ function applyWorkspaceModeUI() {
     if (segPlanner) segPlanner.classList.remove("active");
 
     if (remotePill) remotePill.style.display = "inline-flex";
+    if (btnLockPlanner) btnLockPlanner.style.display = "none";
     plannerNavItems.forEach(el => el.style.display = "none");
     receptionNavItems.forEach(el => el.style.display = "block");
 
@@ -467,6 +519,7 @@ function applyWorkspaceModeUI() {
     if (segPlanner) segPlanner.classList.add("active");
 
     if (remotePill) remotePill.style.display = "none";
+    if (btnLockPlanner) btnLockPlanner.style.display = (user && user.role !== "user") ? "inline-flex" : "none";
     closeRemoteModal();
     plannerNavItems.forEach(el => el.style.display = "block");
     receptionNavItems.forEach(el => el.style.display = "none");
@@ -477,6 +530,262 @@ function applyWorkspaceModeUI() {
   }
 
   renderTableOccupancy();
+}
+
+// ========================================================
+// AUTH GATEWAY & SUPABASE USER SESSION CONTROLLERS
+// ========================================================
+
+function initAuthUI() {
+  const authGateway = document.getElementById("authGatewayScreen");
+  const appRoot = document.getElementById("appRoot");
+  const user = window.SapaAuth ? window.SapaAuth.currentUser : null;
+
+  if (!user) {
+    if (authGateway) authGateway.style.display = "flex";
+    if (appRoot) appRoot.style.display = "none";
+  } else {
+    if (authGateway) authGateway.style.display = "none";
+    if (appRoot) appRoot.style.display = "block";
+    updateUserSessionTopBar(user);
+    applyUserRolePermissions(user);
+  }
+
+  updateSupabaseSettingsUI();
+}
+
+function updateUserSessionTopBar(user) {
+  const badgeEl = document.getElementById("topbarUserRoleBadge");
+  const nameEl = document.getElementById("topbarUserName");
+
+  if (nameEl) nameEl.textContent = user.username || user.fullName;
+  if (badgeEl) {
+    badgeEl.className = `user-role-badge ${user.role}`;
+    if (user.role === "superadmin") badgeEl.textContent = "Superadmin";
+    else if (user.role === "admin") badgeEl.textContent = "Admin WO";
+    else badgeEl.textContent = "Resepsionis";
+  }
+}
+
+function applyUserRolePermissions(user) {
+  if (!user) return;
+  const segPlanner = document.getElementById("segModePlanner");
+
+  if (user.role === "user") {
+    currentMode = "reception";
+    persistState();
+    applyWorkspaceModeUI();
+    if (segPlanner) {
+      segPlanner.title = "Akses Dibatasi: Akun Resepsionis (User) hanya dapat mengakses Meja Resepsi.";
+      segPlanner.style.opacity = "0.5";
+      segPlanner.style.cursor = "not-allowed";
+    }
+  } else {
+    if (segPlanner) {
+      segPlanner.title = "Beralih ke Planner Studio";
+      segPlanner.style.opacity = "1";
+      segPlanner.style.cursor = "pointer";
+    }
+  }
+}
+
+function switchAuthTab(tab) {
+  const btnIn = document.getElementById("btnTabSignIn");
+  const btnUp = document.getElementById("btnTabSignUp");
+  const formIn = document.getElementById("signInForm");
+  const formUp = document.getElementById("signUpForm");
+  const alertBox = document.getElementById("authAlertBox");
+
+  if (alertBox) alertBox.style.display = "none";
+
+  if (tab === "signin") {
+    if (btnIn) btnIn.classList.add("active");
+    if (btnUp) btnUp.classList.remove("active");
+    if (formIn) formIn.style.display = "block";
+    if (formUp) formUp.style.display = "none";
+  } else {
+    if (btnIn) btnIn.classList.remove("active");
+    if (btnUp) btnUp.classList.add("active");
+    if (formIn) formIn.style.display = "none";
+    if (formUp) formUp.style.display = "block";
+  }
+}
+
+async function handleFormSignIn(e) {
+  e.preventDefault();
+  const username = document.getElementById("signInUsername")?.value;
+  const password = document.getElementById("signInPassword")?.value;
+  const remember = document.getElementById("signInRemember")?.checked;
+  const alertBox = document.getElementById("authAlertBox");
+  const btnSubmit = document.getElementById("btnSubmitSignIn");
+
+  if (alertBox) alertBox.style.display = "none";
+  if (btnSubmit) {
+    btnSubmit.disabled = true;
+    btnSubmit.textContent = "Memverifikasi...";
+  }
+
+  try {
+    const user = await window.SapaAuth.signIn(username, password, remember);
+    initAuthUI();
+    showToast("Login Berhasil", `Selamat datang kembali, ${user.fullName} (${user.badge})`, "success");
+  } catch (err) {
+    if (alertBox) {
+      alertBox.className = "auth-alert auth-alert-error";
+      alertBox.textContent = err.message || "Gagal masuk. Periksa kembali kredensial Anda.";
+      alertBox.style.display = "block";
+    }
+  } finally {
+    if (btnSubmit) {
+      btnSubmit.disabled = false;
+      btnSubmit.textContent = "Masuk ke Sistem ➔";
+    }
+  }
+}
+
+async function handleFormSignUp(e) {
+  e.preventDefault();
+  const fullName = document.getElementById("signUpFullName")?.value;
+  const username = document.getElementById("signUpUsername")?.value;
+  const email = document.getElementById("signUpEmail")?.value;
+  const password = document.getElementById("signUpPassword")?.value;
+  const role = document.getElementById("signUpRole")?.value || "user";
+  const alertBox = document.getElementById("authAlertBox");
+  const btnSubmit = document.getElementById("btnSubmitSignUp");
+
+  if (alertBox) alertBox.style.display = "none";
+  if (btnSubmit) {
+    btnSubmit.disabled = true;
+    btnSubmit.textContent = "Mendaftarkan...";
+  }
+
+  try {
+    const user = await window.SapaAuth.signUp(fullName, username, email, password, role);
+    switchAuthTab("signin");
+    const uInp = document.getElementById("signInUsername");
+    const pInp = document.getElementById("signInPassword");
+    if (uInp) uInp.value = user.username;
+    if (pInp) pInp.value = password;
+
+    if (alertBox) {
+      alertBox.className = "auth-alert auth-alert-success";
+      alertBox.textContent = `Pendaftaran berhasil untuk @${user.username}! Silakan klik "Masuk ke Sistem".`;
+      alertBox.style.display = "block";
+    }
+  } catch (err) {
+    if (alertBox) {
+      alertBox.className = "auth-alert auth-alert-error";
+      alertBox.textContent = err.message || "Gagal mendaftarkan akun.";
+      alertBox.style.display = "block";
+    }
+  } finally {
+    if (btnSubmit) {
+      btnSubmit.disabled = false;
+      btnSubmit.textContent = "Daftar Akun Baru ➔";
+    }
+  }
+}
+
+async function handleGoogleSignIn() {
+  const alertBox = document.getElementById("authAlertBox");
+  try {
+    const user = await window.SapaAuth.signInWithGoogle();
+    if (user && user.username) {
+      initAuthUI();
+      showToast("Google Sign-In", `Masuk sebagai ${user.fullName}`, "success");
+    }
+  } catch (err) {
+    if (alertBox) {
+      alertBox.className = "auth-alert auth-alert-error";
+      alertBox.textContent = err.message || "Gagal login dengan Google.";
+      alertBox.style.display = "block";
+    }
+  }
+}
+
+function quickFillAccount(username, password) {
+  switchAuthTab("signin");
+  const uInp = document.getElementById("signInUsername");
+  const pInp = document.getElementById("signInPassword");
+  if (uInp) uInp.value = username;
+  if (pInp) pInp.value = password;
+  const btn = document.getElementById("btnSubmitSignIn");
+  if (btn) btn.focus();
+}
+
+function toggleDemoCredentialsDrawer() {
+  const body = document.getElementById("demoCredentialsBody");
+  const arrow = document.getElementById("demoDrawerArrow");
+  if (!body) return;
+  const isOpen = body.style.display === "block";
+  body.style.display = isOpen ? "none" : "block";
+  if (arrow) arrow.textContent = isOpen ? "▾" : "▴";
+}
+
+function toggleSignInPasswordVisibility() {
+  const passInp = document.getElementById("signInPassword");
+  if (!passInp) return;
+  passInp.type = passInp.type === "password" ? "text" : "password";
+}
+
+function logoutCurrentUser() {
+  if (!confirm("Yakin ingin keluar dari akun saat ini?")) return;
+  if (window.SapaAuth) {
+    window.SapaAuth.signOut();
+  }
+  initAuthUI();
+  showToast("Sesi Berakhir", "Anda telah keluar dari sistem.", "info");
+}
+
+function lockPlannerMode() {
+  switchWorkspaceMode("reception");
+  showToast("Planner Ditutup", "Dialihkan ke Mode Resepsionis.", "info");
+}
+
+function updateSupabaseSettingsUI() {
+  if (!window.SapaAuth) return;
+  const config = window.SapaAuth.getSupabaseConfig();
+  const urlInp = document.getElementById("settingsSupabaseUrl");
+  const keyInp = document.getElementById("settingsSupabaseKey");
+  const badge = document.getElementById("settingsSupabaseBadge");
+
+  if (urlInp && !urlInp.matches(":focus")) urlInp.value = config.url || "";
+  if (keyInp && !keyInp.matches(":focus")) keyInp.value = config.anonKey || "";
+
+  if (badge) {
+    if (window.SapaAuth.isSupabaseConnected()) {
+      badge.textContent = "🟢 Terhubung Cloud Supabase";
+      badge.className = "badge badge-status-in";
+    } else {
+      badge.textContent = "🟡 Mode Lokal / Trial";
+      badge.className = "badge badge-family";
+    }
+  }
+}
+
+function saveSupabaseSettings() {
+  const url = document.getElementById("settingsSupabaseUrl")?.value.trim();
+  const key = document.getElementById("settingsSupabaseKey")?.value.trim();
+
+  if (window.SapaAuth) {
+    window.SapaAuth.saveSupabaseConfig(url, key);
+  }
+  updateSupabaseSettingsUI();
+  showToast("Supabase Disimpan", url ? "Koneksi Supabase diperbarui." : "Kembali ke mode autentikasi lokal / trial.", "success");
+}
+
+async function testSupabaseConnection() {
+  if (!window.SapaAuth || !window.SapaAuth.isSupabaseConnected()) {
+    alert("Supabase belum terhubung. Harap isi URL dan Anon Key proyek Supabase Anda terlebih dahulu.");
+    return;
+  }
+  try {
+    const { data, error } = await window.SapaAuth.client.auth.getSession();
+    if (error) throw error;
+    alert("Koneksi Supabase Cloud Berhasil! Proyek Anda aktif dan siap menerima request autentikasi.");
+  } catch (err) {
+    alert("Gagal menghubungi Supabase: " + (err.message || err));
+  }
 }
 
 // Sidebar Toggle & Collapse Handlers
@@ -518,6 +827,7 @@ function closeRemoteModal() {
 
 // Initialize Application
 document.addEventListener("DOMContentLoaded", () => {
+  initAuthUI();
   initSidebarState();
   setupNavigation();
   setupBarcodeGunListener();

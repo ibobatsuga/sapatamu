@@ -1,5 +1,5 @@
 /**
- * SapaTamu Remote Control Engine (WebRTC Peer-to-Peer)
+ * Nalarasa Remote Control Engine (WebRTC Peer-to-Peer)
  * Allows smartphones to pair with the desktop app via QR Code scan.
  * Features:
  * 1. Wireless Handheld QR Scanner Gun (smartphone camera scans -> laptop prints & records)
@@ -284,7 +284,7 @@ const SapaRemote = {
         <header class="mobile-remote-header">
           <div style="display:flex; align-items:center; gap:8px;">
             <div class="brand-icon" style="width:28px; height:28px; font-size:0.85rem;">❖</div>
-            <strong style="font-size:0.95rem;">SapaTamu Scanner Gun</strong>
+            <strong style="font-size:0.95rem;">Nalarasa Scanner Gun</strong>
           </div>
           <div id="remoteStatusIndicator" class="mobile-status-connecting">
             <span id="remoteStatusText">Menghubungkan...</span>

@@ -1,5 +1,5 @@
 /**
- * SapaTamu — Wedding Management & Smart Reception OS
+ * Nalarasa — Wedding Management & Smart Reception OS
  * Core Application Controller (Multi-Project Hub + Dual-Mode)
  */
 
@@ -2318,7 +2318,7 @@ function downloadCSVTemplate() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = "template_daftar_tamu_sapatamu.csv";
+  a.download = "template_daftar_tamu_nalarasa.csv";
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -2494,7 +2494,7 @@ function downloadJSONBackup() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `sapatamu_backup_all_events_${new Date().toISOString().slice(0, 10)}.json`;
+  a.download = `nalarasa_backup_all_events_${new Date().toISOString().slice(0, 10)}.json`;
   a.click();
   URL.revokeObjectURL(url);
   showToast("Backup Selesai", "Seluruh data proyek berhasil diunduh.", "success");

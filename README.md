@@ -1,4 +1,4 @@
-# VowReception OS — Smart Wedding Management & Check-in System
+# Nalarasa OS — Smart Wedding Management & Check-in System
 
 Sistem manajemen resepsi pernikahan modern dengan antarmuka terinspirasi dari Clean Dashboard (Homel UI), pemindai QR Code undangan digital (**undanganku.id**), dan integrasi langsung ke **Bluetooth Thermal Receipt Printer 58mm (ESC/POS)** untuk mencetak struk meja, kupon doorprize, dan souvenir.
 

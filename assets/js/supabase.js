@@ -1,5 +1,5 @@
 /**
- * SapaTamu — Supabase Authentication & Multi-Role Authorization Controller
+ * Nalarasa — Supabase Authentication & Multi-Role Authorization Controller
  * Dual Mode: Live Supabase Cloud Auth + Instant Zero-Config Trial Mode
  */
 
@@ -13,7 +13,7 @@ const SEED_TRIAL_ACCOUNTS = [
   {
     id: "sa_001",
     username: "superadmin",
-    email: "superadmin@sapatamu.id",
+    email: "superadmin@nalarasa.id",
     password: "Hu33cw56",
     fullName: "Master Superadministrator",
     role: "superadmin", // Access everything: Planner, Resepsionis, Settings, Database
@@ -24,7 +24,7 @@ const SEED_TRIAL_ACCOUNTS = [
   {
     id: "adm_001",
     username: "admin1",
-    email: "admin1@sapatamu.id",
+    email: "admin1@nalarasa.id",
     password: "Admin@Trial1",
     fullName: "WO Captain 1",
     role: "admin",
@@ -33,7 +33,7 @@ const SEED_TRIAL_ACCOUNTS = [
   {
     id: "adm_002",
     username: "admin2",
-    email: "admin2@sapatamu.id",
+    email: "admin2@nalarasa.id",
     password: "Admin@Trial2",
     fullName: "WO Captain 2",
     role: "admin",
@@ -42,7 +42,7 @@ const SEED_TRIAL_ACCOUNTS = [
   {
     id: "adm_003",
     username: "admin3",
-    email: "admin3@sapatamu.id",
+    email: "admin3@nalarasa.id",
     password: "Admin@Trial3",
     fullName: "WO Planner 1",
     role: "admin",
@@ -51,7 +51,7 @@ const SEED_TRIAL_ACCOUNTS = [
   {
     id: "adm_004",
     username: "admin4",
-    email: "admin4@sapatamu.id",
+    email: "admin4@nalarasa.id",
     password: "Admin@Trial4",
     fullName: "WO Planner 2",
     role: "admin",
@@ -60,7 +60,7 @@ const SEED_TRIAL_ACCOUNTS = [
   {
     id: "adm_005",
     username: "admin5",
-    email: "admin5@sapatamu.id",
+    email: "admin5@nalarasa.id",
     password: "Admin@Trial5",
     fullName: "WO Coordinator",
     role: "admin",
@@ -71,7 +71,7 @@ const SEED_TRIAL_ACCOUNTS = [
   {
     id: "usr_001",
     username: "user1",
-    email: "user1@sapatamu.id",
+    email: "user1@nalarasa.id",
     password: "User@Trial1",
     fullName: "Front Desk Crew 1",
     role: "user", // Strictly limited to Reception mode
@@ -80,7 +80,7 @@ const SEED_TRIAL_ACCOUNTS = [
   {
     id: "usr_002",
     username: "user2",
-    email: "user2@sapatamu.id",
+    email: "user2@nalarasa.id",
     password: "User@Trial2",
     fullName: "Front Desk Crew 2",
     role: "user",
@@ -89,7 +89,7 @@ const SEED_TRIAL_ACCOUNTS = [
   {
     id: "usr_003",
     username: "user3",
-    email: "user3@sapatamu.id",
+    email: "user3@nalarasa.id",
     password: "User@Trial3",
     fullName: "Resepsionis Pria",
     role: "user",
@@ -98,7 +98,7 @@ const SEED_TRIAL_ACCOUNTS = [
   {
     id: "usr_004",
     username: "user4",
-    email: "user4@sapatamu.id",
+    email: "user4@nalarasa.id",
     password: "User@Trial4",
     fullName: "Resepsionis Wanita",
     role: "user",
@@ -107,7 +107,7 @@ const SEED_TRIAL_ACCOUNTS = [
   {
     id: "usr_005",
     username: "user5",
-    email: "user5@sapatamu.id",
+    email: "user5@nalarasa.id",
     password: "User@Trial5",
     fullName: "Kru Souvenir & Angpao",
     role: "user",
@@ -142,10 +142,18 @@ const SapaAuth = {
         } else {
           sa.password = "Hu33cw56";
         }
-        // Ensure all 5 admin and 5 user seed accounts exist
+        // Ensure all 5 admin and 5 user seed accounts exist & migrate legacy email domain
+        parsed.forEach(acc => {
+          if (acc.email && acc.email.includes("@sapatamu.id")) {
+            acc.email = acc.email.replace("@sapatamu.id", "@nalarasa.id");
+          }
+        });
         SEED_TRIAL_ACCOUNTS.forEach(seed => {
-          if (!parsed.some(p => p.username === seed.username)) {
+          const existing = parsed.find(p => p.username === seed.username);
+          if (!existing) {
             parsed.push(seed);
+          } else {
+            existing.email = seed.email;
           }
         });
         localStorage.setItem(STORAGE_LOCAL_USERS, JSON.stringify(parsed));
@@ -217,7 +225,7 @@ const SapaAuth = {
     // 1. Try Live Supabase Cloud Auth if configured
     if (this.isSupabaseConnected()) {
       try {
-        const email = idClean.includes("@") ? idClean : `${idClean}@sapatamu.id`;
+        const email = idClean.includes("@") ? idClean : `${idClean}@nalarasa.id`;
         const { data, error } = await this.client.auth.signInWithPassword({
           email: email,
           password: passClean

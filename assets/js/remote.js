@@ -283,7 +283,7 @@ const SapaRemote = {
         <!-- Top Mobile Header -->
         <header class="mobile-remote-header">
           <div style="display:flex; align-items:center; gap:8px;">
-            <div class="brand-icon" style="width:28px; height:28px; font-size:0.85rem;">❖</div>
+            <img src="assets/images/nalarasa-icon-white.png" alt="Nalarasa" style="width:24px; height:24px; object-fit:contain; display:inline-block;">
             <strong style="font-size:0.95rem;">Nalarasa Scanner Gun</strong>
           </div>
           <div id="remoteStatusIndicator" class="mobile-status-connecting">

@@ -1269,13 +1269,29 @@ function renderGuestTable() {
   }
 
   const renderGuestRow = (g, displayIndex) => {
-    const avatarClass = g.category === "VIP" ? "vip" : g.category === "Keluarga" ? "family" : "";
+    const rawTable = (g.table || '').toString().trim();
+    const tableNum = rawTable ? rawTable.replace(/^Meja\s*/i, '') : '-';
+
+    // Determine zone color class based on table area/zone & category
+    const zoneStr = (g.seatZone || '').toLowerCase();
+    const catStr = (g.category || '').toLowerCase();
+    let zoneClass = 'zone-default';
+    if (zoneStr.includes('vip') || zoneStr.includes('depan') || catStr === 'vip') {
+      zoneClass = 'zone-vip';
+    } else if (zoneStr.includes('keluarga') || zoneStr.includes('tengah') || zoneStr.includes('pendopo') || catStr === 'keluarga') {
+      zoneClass = 'zone-keluarga';
+    } else if (zoneStr.includes('sayap') || catStr === 'rekan') {
+      zoneClass = 'zone-rekan';
+    } else if (zoneStr.includes('belakang') || zoneStr.includes('taman') || catStr === 'sahabat') {
+      zoneClass = 'zone-sahabat';
+    }
+
     return `
       <tr>
         <td style="color:var(--text-muted); font-weight:600;">#${displayIndex}</td>
         <td>
           <div class="guest-profile-cell">
-            <div class="guest-avatar ${avatarClass}">${g.name.charAt(0)}</div>
+            <div class="guest-avatar ${zoneClass}" title="Meja ${tableNum} (${g.seatZone || g.category})">${tableNum}</div>
             <div>
               <div class="guest-name-text">${g.name}</div>
               <div class="guest-code-sub">${g.code} • ${g.side}</div>

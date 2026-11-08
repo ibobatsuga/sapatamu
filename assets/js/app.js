@@ -1420,8 +1420,8 @@ function renderGuestTable() {
             : `<span class="badge badge-status-out">○ Belum Hadir</span>`
           }
         </td>
-        <td>
-          <div style="display:flex; gap:6px;">
+        <td class="actions-cell" style="white-space:nowrap; text-align:right;">
+          <div style="display:inline-flex; align-items:center; justify-content:flex-end; gap:6px; flex-wrap:nowrap; white-space:nowrap;">
             <button class="btn btn-outline btn-sm" onclick="openQRCodeModal('${g.id}')" title="Lihat QR Code">
               QR
             </button>
@@ -1429,7 +1429,7 @@ function renderGuestTable() {
               Struk
             </button>
             ${!g.isCheckedIn ? `
-              <button class="btn btn-primary btn-sm" onclick="processGuestCheckInByCode('${g.code}')">
+              <button class="btn btn-primary btn-sm" onclick="processGuestCheckInByCode('${g.code}')" style="white-space:nowrap;">
                 Check-in
               </button>
             ` : ''}

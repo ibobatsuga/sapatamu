@@ -24,156 +24,32 @@ let plannerCredentials = (() => {
 let isPlannerAuthenticated = sessionStorage.getItem(STORAGE_PLANNER_SESSION) === "true" ||
                              localStorage.getItem(STORAGE_PLANNER_REMEMBER) === "true";
 
-// Default Seed Templates for Projects
-const defaultSeedProjects = [
-  {
-    id: "prj_kevin_nadya",
-    title: "The Wedding Celebration",
-    couple: "Kevin & Nadya",
-    date: "24 Oktober 2026",
-    venue: "Grand Ballroom Pullman",
-    status: "Hari-H",
-    targetPax: 250,
-    souvenirTotal: 300,
-    souvenirClaimed: 0,
-    event: {
-      title: "The Wedding Celebration",
-      couple: "Kevin & Nadya",
-      date: "24 Oktober 2026",
-      venue: "Grand Ballroom Pullman",
-      souvenirTotal: 300,
-      souvenirClaimed: 0
-    },
-    tables: [
-      { id: "T1", name: "Meja 01 (VIP Pria)", capacity: 10, zone: "Depan Panggung Kanan" },
-      { id: "T2", name: "Meja 02 (VIP Wanita)", capacity: 10, zone: "Depan Panggung Kiri" },
-      { id: "T3", name: "Meja 03 (Keluarga Pria)", capacity: 10, zone: "Tengah Kanan" },
-      { id: "T4", name: "Meja 04 (Keluarga Wanita)", capacity: 10, zone: "Tengah Kiri" },
-      { id: "T5", name: "Meja 05 (Rekan Bisnis)", capacity: 10, zone: "Belakang Kanan" },
-      { id: "T6", name: "Meja 06 (Sahabat Kampus)", capacity: 10, zone: "Belakang Kiri" }
-    ],
-    guests: [
-      { id: "g1", name: "Bpk. Bambang Soemantri & Istri", code: "KN-8821", category: "VIP", side: "Keluarga Pria", pax: 2, table: "01", seatZone: "Depan Kanan", isCheckedIn: true, checkedInAt: "17:35", souvenirClaimed: true, notes: "Dekat aisle utama" },
-      { id: "g2", name: "Ibu Sri Rahayu", code: "KN-8822", category: "VIP", side: "Keluarga Wanita", pax: 1, table: "02", seatZone: "Depan Kiri", isCheckedIn: true, checkedInAt: "17:42", souvenirClaimed: true, notes: "" },
-      { id: "g3", name: "Dr. Hendra Gunawan", code: "KN-8823", category: "Rekan", side: "Keluarga Pria", pax: 2, table: "05", seatZone: "Belakang Kanan", isCheckedIn: true, checkedInAt: "18:05", souvenirClaimed: false, notes: "Alergi seafood" },
-      { id: "g4", name: "Jessica Tanudjaja", code: "KN-8824", category: "Sahabat", side: "Keluarga Wanita", pax: 1, table: "06", seatZone: "Belakang Kiri", isCheckedIn: false, checkedInAt: null, souvenirClaimed: false, notes: "Bridesmaid" },
-      { id: "g5", name: "Bpk. Johanes Wijaya", code: "KN-8825", category: "VIP", side: "Keluarga Pria", pax: 2, table: "01", seatZone: "Depan Kanan", isCheckedIn: false, checkedInAt: null, souvenirClaimed: false, notes: "" },
-      { id: "g6", name: "Rian Maulana & Partner", code: "KN-8826", category: "Sahabat", side: "Keluarga Pria", pax: 2, table: "06", seatZone: "Belakang Kiri", isCheckedIn: false, checkedInAt: null, souvenirClaimed: false, notes: "" },
-      { id: "g7", name: "Tante Mariana Kusuma", code: "KN-8827", category: "Keluarga", side: "Keluarga Wanita", pax: 3, table: "04", seatZone: "Tengah Kiri", isCheckedIn: false, checkedInAt: null, souvenirClaimed: false, notes: "Perlu kursi roda" }
-    ],
-    timeline: [
-      { id: "tm1", time: "15:30", title: "Loading Vendor & Cek Meja Resepsi", pic: "Ira (WO Lead)", location: "Foyer Ballroom", status: "done", notes: "Pastikan meja registrasi dan aliran antrean rapi." },
-      { id: "tm2", time: "16:30", title: "Briefing Kru Resepsi & Tes Printer 58mm", pic: "Doni (Reception Captain)", location: "Meja Resepsi", status: "done", notes: "Tes print 1 roll kertas thermal dan cek koneksi Bluetooth." },
-      { id: "tm3", time: "17:00", title: "Pintu Foyer Dibuka & Registrasi Tamu", pic: "Tim Resepsionis", location: "Foyer Ballroom", status: "current", notes: "Scan QR tamu undanganku.id, serahkan struk meja & kupon souvenir." },
-      { id: "tm4", time: "18:30", title: "Grand Entrance / Kirab Pengantin", pic: "Floor Captain", location: "Grand Ballroom", status: "upcoming", notes: "Cue musik kirab, lampu spotlight panggung siap." },
-      { id: "tm5", time: "19:15", title: "Sambutan Perwakilan & Toast Bersama", pic: "MC Ferry Salim", location: "Panggung Utama", status: "upcoming", notes: "Keluarga inti berdiri di pelaminan." },
-      { id: "tm6", time: "20:00", title: "Sesi Foto VIP & Makan Malam", pic: "Stage Lead", location: "Pelaminan", status: "upcoming", notes: "Panggil tamu VIP sesuai urutan Meja 01 & 02." },
-      { id: "tm7", time: "21:30", title: "Penutupan & Rekapitulasi Resepsi", pic: "WO Lead & Resepsi", location: "Meja Resepsi", status: "upcoming", notes: "Kunci kotak angpao, serahkan buku tamu dan sisa souvenir ke keluarga." }
-    ],
-    vendors: [
-      { id: "v1", category: "Venue Coordinator", vendorName: "Pullman Grand Ballroom", picName: "Ibu Maya", phone: "081298765432", status: "Standby di Venue", notes: "Akses loading dock & ruang transit" },
-      { id: "v2", category: "Katering", vendorName: "Puspa Catering Nusantara", picName: "Pak Dedi", phone: "081311223344", status: "On-site Ready", notes: "Stok gubukan & VIP dinner table" },
-      { id: "v3", category: "Fotografer & Video", vendorName: "Lumina Visuals", picName: "Mas Kevin", phone: "085699887766", status: "On-site Ready", notes: "Lead photographer panggung & candid" },
-      { id: "v4", category: "Sound & Lighting", vendorName: "ProMax Production", picName: "Mas Bima", phone: "087812345678", status: "On-site Ready", notes: "Audio mic MC & musik latar" },
-      { id: "v5", category: "Master of Ceremony (MC)", vendorName: "Ferry Salim Entertainment", picName: "Ferry Salim", phone: "081198761234", status: "Standby di Venue", notes: "Pemandu susunan acara & kirab" },
-      { id: "v6", category: "Dekorasi Pelaminan", vendorName: "Flora & Vow Decor", picName: "Mbak Nadia", phone: "081512344321", status: "Handover Selesai", notes: "Bunga segar & backdrop photo gallery" },
-      { id: "v7", category: "Make Up Artist (MUA)", vendorName: "Glam by Sarah", picName: "Sarah MUA", phone: "081233445566", status: "Ruang Rias", notes: "Retouch busana nasional & resepsi" }
-    ],
-    checklist: [
-      { id: "c1", zone: "Meja Resepsi", item: "Printer Thermal Bluetooth 58mm", qty: "2 Unit", status: "ready", pic: "Reception Captain" },
-      { id: "c2", zone: "Meja Resepsi", item: "Kertas Roll Thermal 58mm Cadangan", qty: "10 Roll", status: "ready", pic: "Reception Captain" },
-      { id: "c3", zone: "Meja Resepsi", item: "Barcode Scanner Gun USB/Bluetooth", qty: "2 Unit", status: "ready", pic: "Reception Captain" },
-      { id: "c4", zone: "Meja Resepsi", item: "Tablet / Laptop Front Desk + Charger", qty: "2 Unit", status: "ready", pic: "IT Support" },
-      { id: "c5", zone: "Meja Resepsi", item: "Kotak Angpao Gembok & Kunci", qty: "2 Kotak", status: "ready", pic: "Tim Keluarga" },
-      { id: "c6", zone: "Meja Resepsi", item: "Spidol Emas & Buku Tamu Cadangan", qty: "4 Set", status: "ready", pic: "Resepsionis" },
-      { id: "c7", zone: "Souvenir Station", item: "Stok Souvenir Box Reguler", qty: "250 Pcs", status: "ready", pic: "Souvenir Lead" },
-      { id: "c8", zone: "Souvenir Station", item: "Souvenir Khusus Tamu VIP", qty: "50 Pcs", status: "ready", pic: "Souvenir Lead" }
-    ],
-    angpao: [
-      { id: "a1", guestName: "Bpk. Bambang Soemantri & Istri", type: "Amplop Fisik", boxCode: "Kotak A (Keluarga Pria)", time: "17:36", receiver: "Siti (Meja 1)", notes: "Dimasukkan ke Kotak A" },
-      { id: "a2", guestName: "Ibu Sri Rahayu", type: "QRIS / Digital Transfer", boxCode: "BCA Pengantin", time: "17:43", receiver: "Siti (Meja 1)", notes: "Bukti transfer diverifikasi" },
-      { id: "a3", guestName: "Dr. Hendra Gunawan", type: "Kado Fisik", boxCode: "Nomor Titipan #01", time: "18:06", receiver: "Rini (Meja 2)", notes: "Kado diletakkan di rak titipan" }
-    ]
-  },
-  {
-    id: "prj_romeo_juliet",
-    title: "Sacred Holy Matrimony & Reception",
-    couple: "Romeo & Juliet",
-    date: "15 November 2026",
-    venue: "The Glasshouse Conservatory",
-    status: "Mendatang",
-    targetPax: 180,
-    souvenirTotal: 200,
-    souvenirClaimed: 0,
-    event: {
-      title: "Sacred Holy Matrimony & Reception",
-      couple: "Romeo & Juliet",
-      date: "15 November 2026",
-      venue: "The Glasshouse Conservatory",
-      souvenirTotal: 200,
-      souvenirClaimed: 0
-    },
-    tables: [
-      { id: "T1", name: "Meja 01 (VIP Family)", capacity: 10, zone: "Depan Panggung" },
-      { id: "T2", name: "Meja 02 (Wedding Party)", capacity: 10, zone: "Dekat Dance Floor" },
-      { id: "T3", name: "Meja 03 (Colleagues)", capacity: 10, zone: "Area Tengah" }
-    ],
-    guests: [
-      { id: "rj_g1", name: "Montague Family", code: "RJ-1001", category: "VIP", side: "Keluarga Pria", pax: 4, table: "01", seatZone: "Depan Panggung", isCheckedIn: false, checkedInAt: null, souvenirClaimed: false, notes: "" },
-      { id: "rj_g2", name: "Capulet Family", code: "RJ-1002", category: "VIP", side: "Keluarga Wanita", pax: 4, table: "01", seatZone: "Depan Panggung", isCheckedIn: false, checkedInAt: null, souvenirClaimed: false, notes: "" }
-    ],
-    timeline: [
-      { id: "rj_tm1", time: "10:00", title: "Pemberkatan Nikah / Holy Matrimony", pic: "Pendeta & WO", location: "Chapel Glasshouse", status: "upcoming", notes: "Ibadah sakral pemberkatan." },
-      { id: "rj_tm2", time: "12:00", title: "Intimate Lunch Reception", pic: "Reception Team", location: "Main Hall", status: "upcoming", notes: "Santap siang prasmanan." }
-    ],
-    vendors: [
-      { id: "rj_v1", category: "Venue & Catering", vendorName: "Glasshouse Events", picName: "Nora", phone: "081234567890", status: "Confirmed", notes: "Paket all-in venue" }
-    ],
-    checklist: [
-      { id: "rj_c1", zone: "Meja Resepsi", item: "Printer Thermal 58mm", qty: "1 Unit", status: "ready", pic: "WO Lead" }
-    ],
-    angpao: []
-  },
-  {
-    id: "prj_dimas_sarah",
-    title: "Traditional Javanese & Modern Wedding",
-    couple: "Dimas & Sarah",
-    date: "12 Desember 2026",
-    venue: "Plataran Dharmawangsa",
-    status: "Persiapan",
-    targetPax: 300,
-    souvenirTotal: 350,
-    souvenirClaimed: 0,
-    event: {
-      title: "Traditional Javanese & Modern Wedding",
-      couple: "Dimas & Sarah",
-      date: "12 Desember 2026",
-      venue: "Plataran Dharmawangsa",
-      souvenirTotal: 350,
-      souvenirClaimed: 0
-    },
-    tables: [
-      { id: "T1", name: "Meja 01 (VIP Sesepuh)", capacity: 10, zone: "Pendopo Utama" },
-      { id: "T2", name: "Meja 02 (Keluarga Besar)", capacity: 10, zone: "Area Sayap Kanan" }
-    ],
-    guests: [
-      { id: "ds_g1", name: "Prof. Dr. Soedharmono", code: "DS-9001", category: "VIP", side: "Keluarga Pria", pax: 2, table: "01", seatZone: "Pendopo Utama", isCheckedIn: false, checkedInAt: null, souvenirClaimed: false, notes: "" }
-    ],
-    timeline: [
-      { id: "ds_tm1", time: "08:00", title: "Akad Nikah Adat Jawa", pic: "Keluarga & Penghulu", location: "Pendopo", status: "upcoming", notes: "Prosesi Ijab Kabul & Panggih." }
-    ],
-    vendors: [
-      { id: "ds_v1", category: "Dekorasi Tradisional", vendorName: "Kirono Adat", picName: "Pak Joko", phone: "081987654321", status: "Confirmed", notes: "Gebyok Jawa ukiran asli" }
-    ],
-    checklist: [
-      { id: "ds_c1", zone: "Meja Resepsi", item: "Kotak Angpao Tradisional", qty: "2 Unit", status: "ready", pic: "Tim Resepsi" }
-    ],
-    angpao: []
-  }
-];
+// Seed Templates for Projects (loaded from assets/js/seed-data.js)
+const defaultSeedProjects = window.defaultSeedProjects || [];
 
-// Load Projects from LocalStorage or seed defaults
-let appProjects = JSON.parse(localStorage.getItem(STORAGE_PROJECTS)) || defaultSeedProjects;
+// Load Projects from LocalStorage or seed defaults with automatic version migration
+const CURRENT_SEED_VERSION = "20261108_guests_500_150_370";
+let appProjects = (() => {
+  try {
+    const savedVer = localStorage.getItem("vow_seed_version");
+    const saved = localStorage.getItem(STORAGE_PROJECTS);
+    if (!saved || savedVer !== CURRENT_SEED_VERSION) {
+      localStorage.setItem("vow_seed_version", CURRENT_SEED_VERSION);
+      localStorage.setItem(STORAGE_PROJECTS, JSON.stringify(defaultSeedProjects));
+      return JSON.parse(JSON.stringify(defaultSeedProjects));
+    }
+    const parsed = JSON.parse(saved);
+    const kn = parsed.find(p => p.id === "prj_kevin_nadya");
+    if (!kn || kn.guests.length < 500) {
+      localStorage.setItem("vow_seed_version", CURRENT_SEED_VERSION);
+      localStorage.setItem(STORAGE_PROJECTS, JSON.stringify(defaultSeedProjects));
+      return JSON.parse(JSON.stringify(defaultSeedProjects));
+    }
+    return parsed;
+  } catch (e) {
+    return JSON.parse(JSON.stringify(defaultSeedProjects));
+  }
+})();
 let activeProjectId = localStorage.getItem(STORAGE_ACTIVE_PROJECT_ID) || "prj_kevin_nadya";
 
 // Active Project Pointers
@@ -2504,7 +2380,8 @@ function resetDemoData() {
   if (confirm("Apakah Anda yakin ingin mereset seluruh data kembali ke kondisi demo awal? Perubahan yang belum di-backup akan hilang.")) {
     localStorage.removeItem(STORAGE_PROJECTS);
     localStorage.removeItem(STORAGE_ACTIVE_PROJECT_ID);
-    appProjects = defaultSeedProjects;
+    localStorage.removeItem("vow_seed_version");
+    appProjects = JSON.parse(JSON.stringify(defaultSeedProjects));
     activeProject = appProjects[0];
     activeProjectId = activeProject.id;
     appEvent = activeProject.event;
